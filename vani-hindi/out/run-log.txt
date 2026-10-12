@@ -1,0 +1,1928 @@
++ cd /home/runner/work/time-announcer-voices/time-announcer-voices
++ python -m pip install --upgrade pip -q
++ printf 'torch==2.4.1\ntorchaudio==2.4.1\n'
++ pip install -q torch==2.4.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cpu
++ pip install -q -c /tmp/constraints.txt coqui-tts onnx onnxruntime sherpa-onnx soundfile
++ pip list
++ grep -i -E '^(torch|torchaudio|coqui|onnx|onnxruntime|numpy|transformers|sherpa)'
+coqui-tts                  0.27.5
+coqui-tts-trainer          0.3.3
+numpy                      2.4.6
+onnx                       1.23.2
+onnxruntime                1.31.0
+sherpa_onnx                1.13.8
+sherpa-onnx-core           1.13.8
+torch                      2.4.1+cpu
+torchaudio                 2.4.1+cpu
+transformers               5.19.0
++ for V in HindiMale:hi_male_vits_30hrs.pt:male HindiFemale:hi_female_vits_30hrs.pt:female
++ IFS=:
++ read -r REPO PT NAME
++ D=work/male
++ mkdir -p work/male
++ for F in chars.txt extra.py jit_infer.py "$PT"
++ curl -sSL --fail --retry 3 -o work/male/chars.txt https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiMale/resolve/main/chars.txt
++ for F in chars.txt extra.py jit_infer.py "$PT"
++ curl -sSL --fail --retry 3 -o work/male/extra.py https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiMale/resolve/main/extra.py
++ for F in chars.txt extra.py jit_infer.py "$PT"
++ curl -sSL --fail --retry 3 -o work/male/jit_infer.py https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiMale/resolve/main/jit_infer.py
++ for F in chars.txt extra.py jit_infer.py "$PT"
++ curl -sSL --fail --retry 3 -o work/male/hi_male_vits_30hrs.pt https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiMale/resolve/main/hi_male_vits_30hrs.pt
++ ls -la work/male
+total 325492
+drwxr-xr-x 2 runner runner      4096 Oct 12 04:20 .
+drwxr-xr-x 4 runner runner      4096 Oct 12 04:20 ..
+-rw-r--r-- 1 runner runner       225 Oct 12 04:20 chars.txt
+-rw-r--r-- 1 runner runner     26363 Oct 12 04:20 extra.py
+-rw-r--r-- 1 runner runner 333256012 Oct 12 04:20 hi_male_vits_30hrs.pt
+-rw-r--r-- 1 runner runner      1031 Oct 12 04:20 jit_infer.py
++ python vani-hindi/convert.py work/male vani-hindi/out work/release male hi_male_vits_30hrs.pt
+
+==================== FILES ====================
+----- jit_infer.py -----
+import os
+from extra import TTSTokenizer, VitsConfig, CharactersConfig, VitsCharacters
+import torch
+import numpy as np
+
+#ch female
+with open("chars.txt", 'r') as f:
+    letters = f.read().strip('\n')
+model="hi_male_vits_30hrs.pt"
+text = "फिल्म गर्दिश में अमरीश पुरी के साथ जैकी श्रॉफ, ऐश्वर्या, डिंपल कपाड़िया"
+
+config = VitsConfig(
+    text_cleaner="multilingual_cleaners",
+    characters=CharactersConfig(
+        characters_class=VitsCharacters,
+        pad="<PAD>",
+        eos="<EOS>",
+        bos="<BOS>",
+        blank="<BLNK>",
+        characters=letters,
+        punctuations="!¡'(),-.:;¿? ",
+        phonemes=None)
+    )
+tokenizer, config = TTSTokenizer.init_from_config(config)
+
+x = tokenizer.text_to_ids(text)
+x = torch.from_numpy(np.array(x)).unsqueeze(0)
+net = torch.jit.load(model)
+with torch.no_grad():
+    out2 = net(x)
+import soundfile as sf
+sf.write("jit.wav", out2.squeeze().cpu().numpy(), 22050)
+----- extra.py -----
+from typing import Callable, Dict, List, Union
+from dataclasses import asdict, dataclass, field
+
+
+import re
+from dataclasses import replace
+from typing import Dict
+_whitespace_re = re.compile(r"\s+")
+
+from dataclasses import dataclass, field
+from typing import List
+
+# from TTS.tts.configs.shared_configs import BaseTTSConfig
+# from TTS.tts.models.vits import VitsArgs, VitsAudioConfig
+
+@dataclass
+class CharactersConfig():
+
+    characters_class: str = None
+
+    # using BaseVocabulary
+    vocab_dict: Dict = None
+
+    # using on BaseCharacters
+    pad: str = None
+    eos: str = None
+    bos: str = None
+    blank: str = None
+    characters: str = None
+    punctuations: str = None
+    phonemes: str = None
+    is_unique: bool = True  # for backwards compatibility of models trained with char sets with duplicates
+    is_sorted: bool = True
+
+
+@dataclass
+class BaseTTSConfig():
+
+    # audio: BaseAudioConfig = field(default_factory=BaseAudioConfig)
+    # phoneme settings
+    use_phonemes: bool = False
+    phonemizer: str = None
+    phoneme_language: str = None
+    compute_input_seq_cache: bool = False
+    text_cleaner: str = None
+    enable_eos_bos_chars: bool = False
+    test_sentences_file: str = ""
+    phoneme_cache_path: str = None
+    # vocabulary parameters
+    characters: CharactersConfig = None
+    add_blank: bool = False
+    # training params
+    batch_group_size: int = 0
+    loss_masking: bool = None
+    # dataloading
+    min_audio_len: int = 1
+    max_audio_len: int = float("inf")
+    min_text_len: int = 1
+    max_text_len: int = float("inf")
+    compute_f0: bool = False
+    compute_energy: bool = False
+    compute_linear_spec: bool = False
+    precompute_num_workers: int = 0
+    use_noise_augment: bool = False
+    start_by_longest: bool = False
+    shuffle: bool = False
+    drop_last: bool = False
+    # dataset
+    datasets: str = None
+    # optimizer
+    optimizer: str = "radam"
+    optimizer_params: dict = None
+    # scheduler
+    lr_scheduler: str = None
+    lr_scheduler_params: dict = field(default_factory=lambda: {})
+    # testing
+    test_sentences: List[str] = field(default_factory=lambda: [])
+    # evaluation
+    eval_split_max_size: int = None
+    eval_split_size: float = 0.01
+    # weighted samplers
+    use_speaker_weighted_sampler: bool = False
+    speaker_weighted_sampler_alpha: float = 1.0
+    use_language_weighted_sampler: bool = False
+    language_weighted_sampler_alpha: float = 1.0
+    use_length_weighted_sampler: bool = False
+    length_weighted_sampler_alpha: float = 1.0
+
+
+@dataclass
+class VitsAudioConfig():
+    fft_size: int = 1024
+    sample_rate: int = 22050
+    win_length: int = 1024
+    hop_length: int = 256
+    num_mels: int = 80
+    mel_fmin: int = 0
+    mel_fmax: int = None
+    
+@dataclass
+class VitsArgs():
+    num_chars: int = 100
+    out_channels: int = 513
+    spec_segment_size: int = 32
+    hidden_channels: int = 192
+    hidden_channels_ffn_text_encoder: int = 768
+    num_heads_text_encoder: int = 2
+    num_layers_text_encoder: int = 6
+    kernel_size_text_encoder: int = 3
+    dropout_p_text_encoder: float = 0.1
+    dropout_p_duration_predictor: float = 0.5
+    kernel_size_posterior_encoder: int = 5
+    dilation_rate_posterior_encoder: int = 1
+    num_layers_posterior_encoder: int = 16
+    kernel_size_flow: int = 5
+    dilation_rate_flow: int = 1
+    num_layers_flow: int = 4
+    resblock_type_decoder: str = "1"
+    resblock_kernel_sizes_decoder: List[int] = field(default_factory=lambda: [3, 7, 11])
+    resblock_dilation_sizes_decoder: List[List[int]] = field(default_factory=lambda: [[1, 3, 5], [1, 3, 5], [1, 3, 5]])
+    upsample_rates_decoder: List[int] = field(default_factory=lambda: [8, 8, 2, 2])
+    upsample_initial_channel_decoder: int = 512
+    upsample_kernel_sizes_decoder: List[int] = field(default_factory=lambda: [16, 16, 4, 4])
+    periods_multi_period_discriminator: List[int] = field(default_factory=lambda: [2, 3, 5, 7, 11])
+    use_sdp: bool = True
+    noise_scale: float = 1.0
+    inference_noise_scale: float = 0.667
+    length_scale: float = 1
+    noise_scale_dp: float = 1.0
+    inference_noise_scale_dp: float = 1.0
+    max_inference_len: int = None
+    init_discriminator: bool = True
+    use_spectral_norm_disriminator: bool = False
+    use_speaker_embedding: bool = False
+    num_speakers: int = 0
+    speakers_file: str = None
+    d_vector_file: List[str] = None
+    speaker_embedding_channels: int = 256
+    use_d_vector_file: bool = False
+    d_vector_dim: int = 0
+    detach_dp_input: bool = True
+    use_language_embedding: bool = False
+    embedded_language_dim: int = 4
+    num_languages: int = 0
+    language_ids_file: str = None
+    use_speaker_encoder_as_loss: bool = False
+    speaker_encoder_config_path: str = ""
+    speaker_encoder_model_path: str = ""
+    condition_dp_on_speaker: bool = True
+    freeze_encoder: bool = False
+    freeze_DP: bool = False
+    freeze_PE: bool = False
+    freeze_flow_decoder: bool = False
+    freeze_waveform_decoder: bool = False
+    encoder_sample_rate: int = None
+    interpolate_z: bool = True
+    reinit_DP: bool = False
+    reinit_text_encoder: bool = False
+@dataclass
+class VitsConfig(BaseTTSConfig):
+
+    model: str = "vits"
+    # model specific params
+    model_args: VitsArgs = field(default_factory=VitsArgs)
+    audio: VitsAudioConfig = field(default_factory=VitsAudioConfig)
+
+    # optimizer
+    grad_clip: List[float] = field(default_factory=lambda: [1000, 1000])
+    lr_gen: float = 0.0002
+    lr_disc: float = 0.0002
+    lr_scheduler_gen: str = "ExponentialLR"
+    lr_scheduler_gen_params: dict = field(default_factory=lambda: {"gamma": 0.999875, "last_epoch": -1})
+    lr_scheduler_disc: str = "ExponentialLR"
+    lr_scheduler_disc_params: dict = field(default_factory=lambda: {"gamma": 0.999875, "last_epoch": -1})
+    scheduler_after_epoch: bool = True
+    optimizer: str = "AdamW"
+    optimizer_params: dict = field(default_factory=lambda: {"betas": [0.8, 0.99], "eps": 1e-9, "weight_decay": 0.01})
+
+    # loss params
+    kl_loss_alpha: float = 1.0
+    disc_loss_alpha: float = 1.0
+    gen_loss_alpha: float = 1.0
+    feat_loss_alpha: float = 1.0
+    mel_loss_alpha: float = 45.0
+    dur_loss_alpha: float = 1.0
+    speaker_encoder_loss_alpha: float = 1.0
+
+    # data loader params
+    return_wav: bool = True
+    compute_linear_spec: bool = True
+
+    # sampler params
+    use_weighted_sampler: bool = False  # TODO: move it to the base config
+    weighted_sampler_attrs: dict = field(default_factory=lambda: {})
+    weighted_sampler_multipliers: dict = field(default_factory=lambda: {})
+
+    # overrides
+    r: int = 1  # DO NOT CHANGE
+    add_blank: bool = True
+
+    # testing
+    test_sentences: List[List] = field(
+        default_factory=lambda: [
+            ["It took me quite a long time to develop a voice, and now that I have it I'm not going to be silent."],
+            ["Be a voice, not an echo."],
+            ["I'm sorry Dave. I'm afraid I can't do that."],
+            ["This cake is great. It's so delicious and moist."],
+            ["Prior to November 22, 1963."],
+        ]
+    )
+
+    # multi-speaker settings
+    # use speaker embedding layer
+    num_speakers: int = 0
+    use_speaker_embedding: bool = False
+    speakers_file: str = None
+    speaker_embedding_channels: int = 256
+    language_ids_file: str = None
+    use_language_embedding: bool = False
+
+    # use d-vectors
+    use_d_vector_file: bool = False
+    d_vector_file: List[str] = None
+    d_vector_dim: int = None
+
+    def __post_init__(self):
+        pass
+        # for key, val in self.model_args.items():
+        #     if hasattr(self, key):
+        #         self[key] = val
+
+
+
+
+
+def parse_symbols():
+    return {
+        "pad": _pad,
+        "eos": _eos,
+        "bos": _bos,
+        "characters": _characters,
+        "punctuations": _punctuations,
+        "phonemes": _phonemes,
+    }
+
+
+# DEFAULT SET OF GRAPHEMES
+_pad = "<PAD>"
+_eos = "<EOS>"
+_bos = "<BOS>"
+_blank = "<BLNK>"  # TODO: check if we need this alongside with PAD
+_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+_punctuations = "!'(),-.:;? "
+
+
+# DEFAULT SET OF IPA PHONEMES
+# Phonemes definition (All IPA characters)
+_vowels = "iyɨʉɯuɪʏʊeøɘəɵɤoɛœɜɞʌɔæɐaɶɑɒᵻ"
+_non_pulmonic_consonants = "ʘɓǀɗǃʄǂɠǁʛ"
+_pulmonic_consonants = "pbtdʈɖcɟkɡqɢʔɴŋɲɳnɱmʙrʀⱱɾɽɸβfvθðszʃʒʂʐçʝxɣχʁħʕhɦɬɮʋɹɻjɰlɭʎʟ"
+_suprasegmentals = "ˈˌːˑ"
+_other_symbols = "ʍwɥʜʢʡɕʑɺɧʲ"
+_diacrilics = "ɚ˞ɫ"
+_phonemes = _vowels + _non_pulmonic_consonants + _pulmonic_consonants + _suprasegmentals + _other_symbols + _diacrilics
+
+
+class BaseVocabulary:
+    """Base Vocabulary class.
+
+    This class only needs a vocabulary dictionary without specifying the characters.
+
+    Args:
+        vocab (Dict): A dictionary of characters and their corresponding indices.
+    """
+
+    def __init__(self, vocab: Dict, pad: str = None, blank: str = None, bos: str = None, eos: str = None):
+        self.vocab = vocab
+        self.pad = pad
+        self.blank = blank
+        self.bos = bos
+        self.eos = eos
+
+    @property
+    def pad_id(self) -> int:
+        """Return the index of the padding character. If the padding character is not specified, return the length
+        of the vocabulary."""
+        return self.char_to_id(self.pad) if self.pad else len(self.vocab)
+
+    @property
+    def blank_id(self) -> int:
+        """Return the index of the blank character. If the blank character is not specified, return the length of
+        the vocabulary."""
+        return self.char_to_id(self.blank) if self.blank else len(self.vocab)
+
+    @property
+    def bos_id(self) -> int:
+        """Return the index of the bos character. If the bos character is not specified, return the length of the
+        vocabulary."""
+        return self.char_to_id(self.bos) if self.bos else len(self.vocab)
+
+    @property
+    def eos_id(self) -> int:
+        """Return the index of the eos character. If the eos character is not specified, return the length of the
+        vocabulary."""
+        return self.char_to_id(self.eos) if self.eos else len(self.vocab)
+
+    @property
+    def vocab(self):
+        """Return the vocabulary dictionary."""
+        return self._vocab
+
+    @vocab.setter
+    def vocab(self, vocab):
+        """Set the vocabulary dictionary and character mapping dictionaries."""
+        self._vocab, self._char_to_id, self._id_to_char = None, None, None
+        if vocab is not None:
+            self._vocab = vocab
+            self._char_to_id = {char: idx for idx, char in enumerate(self._vocab)}
+            self._id_to_char = {
+                idx: char for idx, char in enumerate(self._vocab)  # pylint: disable=unnecessary-comprehension
+            }
+
+    @staticmethod
+    def init_from_config(config, **kwargs):
+        """Initialize from the given config."""
+        if config.characters is not None and "vocab_dict" in config.characters and config.characters.vocab_dict:
+            return (
+                BaseVocabulary(
+                    config.characters.vocab_dict,
+                    config.characters.pad,
+                    config.characters.blank,
+                    config.characters.bos,
+                    config.characters.eos,
+                ),
+                config,
+            )
+        return BaseVocabulary(**kwargs), config
+
+    def to_config(self):
+        return CharactersConfig(
+            vocab_dict=self._vocab,
+            pad=self.pad,
+            eos=self.eos,
+            bos=self.bos,
+            blank=self.blank,
+            is_unique=False,
+            is_sorted=False,
+        )
+
+    @property
+    def num_chars(self):
+        """Return number of tokens in the vocabulary."""
+        return len(self._vocab)
+
+    def char_to_id(self, char: str) -> int:
+        """Map a character to an token ID."""
+        try:
+            return self._char_to_id[char]
+        except KeyError as e:
+            raise KeyError(f" [!] {repr(char)} is not in the vocabulary.") from e
+
+    def id_to_char(self, idx: int) -> str:
+        """Map an token ID to a character."""
+        return self._id_to_char[idx]
+
+
+class BaseCharacters:
+
+
+    def __init__(
+        self,
+        characters: str = None,
+        punctuations: str = None,
+        pad: str = None,
+        eos: str = None,
+        bos: str = None,
+        blank: str = None,
+        is_unique: bool = False,
+        is_sorted: bool = True,
+    ) -> None:
+        self._characters = characters
+        self._punctuations = punctuations
+        self._pad = pad
+        self._eos = eos
+        self._bos = bos
+        self._blank = blank
+        self.is_unique = is_unique
+        self.is_sorted = is_sorted
+        self._create_vocab()
+
+    @property
+    def pad_id(self) -> int:
+        return self.char_to_id(self.pad) if self.pad else len(self.vocab)
+
+    @property
+    def blank_id(self) -> int:
+        return self.char_to_id(self.blank) if self.blank else len(self.vocab)
+
+    @property
+    def eos_id(self) -> int:
+        return self.char_to_id(self.eos) if self.eos else len(self.vocab)
+
+    @property
+    def bos_id(self) -> int:
+        return self.char_to_id(self.bos) if self.bos else len(self.vocab)
+
+    @property
+    def characters(self):
+        return self._characters
+
+    @characters.setter
+    def characters(self, characters):
+        self._characters = characters
+        self._create_vocab()
+
+    @property
+    def punctuations(self):
+        return self._punctuations
+
+    @punctuations.setter
+    def punctuations(self, punctuations):
+        self._punctuations = punctuations
+        self._create_vocab()
+
+    @property
+    def pad(self):
+        return self._pad
+
+    @pad.setter
+    def pad(self, pad):
+        self._pad = pad
+        self._create_vocab()
+
+    @property
+    def eos(self):
+        return self._eos
+
+    @eos.setter
+    def eos(self, eos):
+        self._eos = eos
+        self._create_vocab()
+
+    @property
+    def bos(self):
+        return self._bos
+
+    @bos.setter
+    def bos(self, bos):
+        self._bos = bos
+        self._create_vocab()
+
+    @property
+    def blank(self):
+        return self._blank
+
+    @blank.setter
+    def blank(self, blank):
+        self._blank = blank
+        self._create_vocab()
+
+    @property
+    def vocab(self):
+        return self._vocab
+
+    @vocab.setter
+    def vocab(self, vocab):
+        self._vocab = vocab
+        self._char_to_id = {char: idx for idx, char in enumerate(self.vocab)}
+        self._id_to_char = {
+            idx: char for idx, char in enumerate(self.vocab)  # pylint: disable=unnecessary-comprehension
+        }
+
+    @property
+    def num_chars(self):
+        return len(self._vocab)
+
+    def _create_vocab(self):
+        _vocab = self._characters
+        if self.is_unique:
+            _vocab = list(set(_vocab))
+        if self.is_sorted:
+            _vocab = sorted(_vocab)
+        _vocab = list(_vocab)
+        _vocab = [self._blank] + _vocab if self._blank is not None and len(self._blank) > 0 else _vocab
+        _vocab = [self._bos] + _vocab if self._bos is not None and len(self._bos) > 0 else _vocab
+        _vocab = [self._eos] + _vocab if self._eos is not None and len(self._eos) > 0 else _vocab
+        _vocab = [self._pad] + _vocab if self._pad is not None and len(self._pad) > 0 else _vocab
+        self.vocab = _vocab + list(self._punctuations)
+        if self.is_unique:
+            duplicates = {x for x in self.vocab if self.vocab.count(x) > 1}
+            assert (
+                len(self.vocab) == len(self._char_to_id) == len(self._id_to_char)
+            ), f" [!] There are duplicate characters in the character set. {duplicates}"
+
+    def char_to_id(self, char: str) -> int:
+        try:
+            return self._char_to_id[char]
+        except KeyError as e:
+            raise KeyError(f" [!] {repr(char)} is not in the vocabulary.") from e
+
+    def id_to_char(self, idx: int) -> str:
+        return self._id_to_char[idx]
+
+    def print_log(self, level: int = 0):
+        """
+        Prints the vocabulary in a nice format.
+        """
+        indent = "\t" * level
+        print(f"{indent}| > Characters: {self._characters}")
+        print(f"{indent}| > Punctuations: {self._punctuations}")
+        print(f"{indent}| > Pad: {self._pad}")
+        print(f"{indent}| > EOS: {self._eos}")
+        print(f"{indent}| > BOS: {self._bos}")
+        print(f"{indent}| > Blank: {self._blank}")
+        print(f"{indent}| > Vocab: {self.vocab}")
+        print(f"{indent}| > Num chars: {self.num_chars}")
+
+    @staticmethod
+    def init_from_config(config: "Coqpit"):  # pylint: disable=unused-argument
+        """Init your character class from a config.
+
+        Implement this method for your subclass.
+        """
+        # use character set from config
+        if config.characters is not None:
+            return BaseCharacters(**config.characters), config
+        # return default character set
+        characters = BaseCharacters()
+        new_config = replace(config, characters=characters.to_config())
+        return characters, new_config
+
+    def to_config(self) -> "CharactersConfig":
+        return CharactersConfig(
+            characters=self._characters,
+            punctuations=self._punctuations,
+            pad=self._pad,
+            eos=self._eos,
+            bos=self._bos,
+            blank=self._blank,
+            is_unique=self.is_unique,
+            is_sorted=self.is_sorted,
+        )
+
+
+class IPAPhonemes(BaseCharacters):
+ 
+
+    def __init__(
+        self,
+        characters: str = _phonemes,
+        punctuations: str = _punctuations,
+        pad: str = _pad,
+        eos: str = _eos,
+        bos: str = _bos,
+        blank: str = _blank,
+        is_unique: bool = False,
+        is_sorted: bool = True,
+    ) -> None:
+        super().__init__(characters, punctuations, pad, eos, bos, blank, is_unique, is_sorted)
+
+    @staticmethod
+    def init_from_config(config: "Coqpit"):
+        """Init a IPAPhonemes object from a model config
+
+        If characters are not defined in the config, it will be set to the default characters and the config
+        will be updated.
+        """
+        # band-aid for compatibility with old models
+        if "characters" in config and config.characters is not None:
+            if "phonemes" in config.characters and config.characters.phonemes is not None:
+                config.characters["characters"] = config.characters["phonemes"]
+            return (
+                IPAPhonemes(
+                    characters=config.characters["characters"],
+                    punctuations=config.characters["punctuations"],
+                    pad=config.characters["pad"],
+                    eos=config.characters["eos"],
+                    bos=config.characters["bos"],
+                    blank=config.characters["blank"],
+                    is_unique=config.characters["is_unique"],
+                    is_sorted=config.characters["is_sorted"],
+                ),
+                config,
+            )
+        # use character set from config
+        if config.characters is not None:
+            return IPAPhonemes(**config.characters), config
+        # return default character set
+        characters = IPAPhonemes()
+        new_config = replace(config, characters=characters.to_config())
+        return characters, new_config
+
+
+class Graphemes(BaseCharacters):
+ 
+
+    def __init__(
+        self,
+        characters: str = _characters,
+        punctuations: str = _punctuations,
+        pad: str = _pad,
+        eos: str = _eos,
+        bos: str = _bos,
+        blank: str = _blank,
+        is_unique: bool = False,
+        is_sorted: bool = True,
+    ) -> None:
+        super().__init__(characters, punctuations, pad, eos, bos, blank, is_unique, is_sorted)
+
+    @staticmethod
+    def init_from_config(config: "Coqpit"):
+        """Init a Graphemes object from a model config
+
+        If characters are not defined in the config, it will be set to the default characters and the config
+        will be updated.
+        """
+        if config.characters is not None:
+            # band-aid for compatibility with old models
+            if "phonemes" in config.characters:
+                return (
+                    Graphemes(
+                        characters=config.characters["characters"],
+                        punctuations=config.characters["punctuations"],
+                        pad=config.characters["pad"],
+                        eos=config.characters["eos"],
+                        bos=config.characters["bos"],
+                        blank=config.characters["blank"],
+                        is_unique=config.characters["is_unique"],
+                        is_sorted=config.characters["is_sorted"],
+                    ),
+                    config,
+                )
+            return Graphemes(**config.characters), config
+        characters = Graphemes()
+        new_config = replace(config, characters=characters.to_config())
+        return characters, new_config
+
+
+if __name__ == "__main__":
+    gr = Graphemes()
+    ph = IPAPhonemes()
+    gr.print_log()
+    ph.print_log()
+
+
+class VitsCharacters(BaseCharacters):
+    """Characters class for VITs model for compatibility with pre-trained models"""
+
+    def __init__(
+        self,
+        graphemes: str = _characters,
+        punctuations: str = _punctuations,
+        pad: str = _pad,
+        ipa_characters: str = _phonemes,
+    ) -> None:
+        if ipa_characters is not None:
+            graphemes += ipa_characters
+        super().__init__(graphemes, punctuations, pad, None, None, "<BLNK>", is_unique=False, is_sorted=True)
+
+    def _create_vocab(self):
+        self._vocab = [self._pad] + list(self._punctuations) + list(self._characters) + [self._blank]
+        self._char_to_id = {char: idx for idx, char in enumerate(self.vocab)}
+        # pylint: disable=unnecessary-comprehension
+        self._id_to_char = {idx: char for idx, char in enumerate(self.vocab)}
+
+    @staticmethod
+    def init_from_config(config):
+        _pad = config.characters.pad
+        _punctuations = config.characters.punctuations
+        _letters = config.characters.characters
+        _letters_ipa = config.characters.phonemes
+        return (
+            VitsCharacters(graphemes=_letters, ipa_characters=_letters_ipa, punctuations=_punctuations, pad=_pad),
+            config,
+        )
+
+    def to_config(self) -> "CharactersConfig":
+        return CharactersConfig(
+            characters=self._characters,
+            punctuations=self._punctuations,
+            pad=self._pad,
+            eos=None,
+            bos=None,
+            blank=self._blank,
+            is_unique=False,
+            is_sorted=True,
+        )
+        
+class TTSTokenizer:
+    def __init__(
+        self,
+        text_cleaner: Callable = None,
+        characters: "BaseCharacters" = None,
+    ):
+        self.text_cleaner = text_cleaner
+        self.characters = characters
+        self.not_found_characters = []
+
+    @property
+    def characters(self):
+        return self._characters
+
+    @characters.setter
+    def characters(self, new_characters):
+        self._characters = new_characters
+        self.pad_id = self.characters.char_to_id(self.characters.pad) if self.characters.pad else None
+        self.blank_id = self.characters.char_to_id(self.characters.blank) if self.characters.blank else None
+
+    def encode(self, text: str) -> List[int]:
+        """Encodes a string of text as a sequence of IDs."""
+        token_ids = []
+        for char in text:
+            try:
+                idx = self.characters.char_to_id(char)
+                token_ids.append(idx)
+            except KeyError:
+                # discard but store not found characters
+                if char not in self.not_found_characters:
+                    self.not_found_characters.append(char)
+                    print(text)
+                    print(f" [!] Character {repr(char)} not found in the vocabulary. Discarding it.")
+        return token_ids
+
+    def text_to_ids(self, text: str, language: str = None) -> List[int]:  # pylint: disable=unused-argument
+        text = self.text_cleaner(text)
+        text = self.encode(text)
+        text = self.intersperse_blank_char(text, True)
+        return text
+
+    def pad_with_bos_eos(self, char_sequence: List[str]):
+        """Pads a sequence with the special BOS and EOS characters."""
+        return [self.characters.bos_id] + list(char_sequence) + [self.characters.eos_id]
+
+    def intersperse_blank_char(self, char_sequence: List[str], use_blank_char: bool = False):
+        """Intersperses the blank character between characters in a sequence.
+
+        Use the ```blank``` character if defined else use the ```pad``` character.
+        """
+        char_to_use = self.characters.blank_id if use_blank_char else self.characters.pad
+        result = [char_to_use] * (len(char_sequence) * 2 + 1)
+        result[1::2] = char_sequence
+        return result
+
+    @staticmethod
+    def init_from_config(config: "Coqpit", characters: "BaseCharacters" = None):
+        text_cleaner = multilingual_cleaners
+        CharactersClass = VitsCharacters
+        characters, new_config = CharactersClass.init_from_config(config)
+        # new_config.characters.characters_class = get_import_path(characters)
+        new_config.characters.characters_class = VitsCharacters
+        return (
+            TTSTokenizer(text_cleaner, characters),new_config)
+
+
+def multilingual_cleaners(text):
+    """Pipeline for multilingual text"""
+    text = lowercase(text)
+    text = replace_symbols(text, lang=None)
+    text = remove_aux_symbols(text)
+    text = collapse_whitespace(text)
+    return text
+
+def lowercase(text):
+    return text.lower()
+
+def collapse_whitespace(text):
+    return re.sub(_whitespace_re, " ", text).strip()
+
+def replace_symbols(text, lang="en"):
+
+    text = text.replace(";", ",")
+    text = text.replace("-", " ") if lang != "ca" else text.replace("-", "")
+    text = text.replace(":", ",")
+    if lang == "en":
+        text = text.replace("&", " and ")
+    elif lang == "fr":
+        text = text.replace("&", " et ")
+    elif lang == "pt":
+        text = text.replace("&", " e ")
+    elif lang == "ca":
+        text = text.replace("&", " i ")
+        text = text.replace("'", "")
+    return text
+
+def remove_aux_symbols(text):
+    text = re.sub(r"[\<\>\(\)\[\]\"]+", "", text)
+    return text
+chars.txt repr: 'शदऊतओसषमऱढै?ख़ौक़ड़ःिअनठय़ज़फ़्खँे।ंऋउ\'हछङझ" ुणऔयघञृएईॆीपचॉॠवगडटइ,बॅूऐफजकलग़आधोथाभढ़ऑ\n'
+
+==================== JIT MODEL ====================
+type: <class 'torch.jit._script.RecursiveScriptModule'> original_name: Vits
+forward schema: forward(__torch__.inference_model.Vits self, Tensor x) -> Tensor
+child: text_encoder TextEncoder
+child: posterior_encoder PosteriorEncoder
+child: flow ResidualCouplingBlocks
+child: duration_predictor StochasticDurationPredictor
+child: waveform_decoder HifiganGenerator
+child: disc VitsDiscriminator
+CODE:
+ def forward(self,
+    x: Tensor) -> Tensor:
+  waveform_decoder = self.waveform_decoder
+  flow = self.flow
+  duration_predictor = self.duration_predictor
+  text_encoder = self.text_encoder
+  _0 = torch.to(CONSTANTS.c0, torch.device("cpu"), 4)
+  x_lengths = torch.to(torch.detach(_0), dtype=4, layout=0, device=torch.device("cpu"))
+  _1 = (text_encoder).forward(x, x_lengths, )
+  _2, _3, _4, _5, = _1
+  _6 = (duration_predictor).forward(_2, _3, )
+  w = torch.mul(torch.mul(torch.exp(_6), _3), CONSTANTS.c1)
+  w_ceil = torch.ceil(w)
+  _7 = torch.clamp_min(torch.sum(w_ceil, [1, 2]), 1)
+  sequence_length = torch.to(_7, 4)
+  max_len = torch.max(sequence_length)
+  seq_range = torch.arange(annotate(number, max_len), dtype=4, layout=None, device=torch.device("cpu"), pin_memory=False)
+  _8 = torch.lt(torch.unsqueeze(seq_range, 0), torch.unsqueeze(sequence_length, 1))
+  y_mask = torch.unsqueeze(torch.to(_8, 6), 1)
+  attn_mask = torch.mul(_3, torch.transpose(y_mask, 1, 2))
+  duration = torch.squeeze(w_ceil, 1)
+  mask = torch.transpose(torch.squeeze(attn_mask, 1), 1, 2)
+  b = ops.prim.NumToTensor(torch.size(mask, 0))
+  _9 = int(b)
+  t_x = ops.prim.NumToTensor(torch.size(mask, 1))
+  _10 = int(t_x)
+  max_len0 = ops.prim.NumToTensor(torch.size(mask, 2))
+  _11 = int(max_len0)
+  _12 = annotate(number, max_len0)
+  cum_duration = torch.cumsum(duration, 1)
+  sequence_length0 = torch.view(cum_duration, [int(torch.mul(b, t_x))])
+  seq_range0 = torch.arange(_12, dtype=6, layout=None, device=torch.device("cpu"), pin_memory=False)
+  _13 = torch.lt(torch.unsqueeze(seq_range0, 0), torch.unsqueeze(sequence_length0, 1))
+  path = torch.to(_13, 6)
+  path0 = torch.view(path, [_9, _10, _11])
+  _14 = torch.slice(torch.pad(path0, [0, 0, 1, 0, 0, 0]), 0, 0, 9223372036854775807)
+  path1 = torch.sub(path0, torch.slice(_14, 1, 0, -1))
+  attn = torch.mul(path1, mask)
+  _15 = torch.matmul(torch.transpose(attn, 1, 2), torch.transpose(_4, 1, 2))
+  m_p = torch.transpose(_15, 1, 2)
+  _16 = torch.matmul(torch.transpose(attn, 1, 2), torch.transpose(_5, 1, 2))
+  logs_p = torch.transpose(_16, 1, 2)
+  _17 = torch.randn_like(m_p, dtype=6, layout=0, device=torch.device("cpu"), pin_memory=False)
+  _18 = torch.mul(torch.mul(_17, torch.exp(logs_p)), CONSTANTS.c2)
+  x0 = torch.add(m_p, _18)
+  _19 = torch.mul((flow).forward(x0, y_mask, ), y_mask)
+  _20 = torch.slice(_19, 0, 0, 9223372036854775807)
+  _21 = torch.slice(_20, 1, 0, 9223372036854775807)
+  input = torch.slice(_21, 2, 0, 9223372036854775807)
+  return (waveform_decoder).forward(input, )
+
+tensors: 949 numel: 83051884
+prefixes: Counter({'duration_predictor': 284, 'waveform_decoder': 231, 'flow': 112, 'text_encoder': 111, 'disc': 111, 'posterior_encoder': 100})
+   text_encoder.emb.weight (93, 192)
+   text_encoder.encoder.attn_layers.0.emb_rel_k (1, 9, 96)
+   text_encoder.encoder.attn_layers.0.emb_rel_v (1, 9, 96)
+   text_encoder.encoder.attn_layers.0.conv_q.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.0.conv_q.bias (192,)
+   text_encoder.encoder.attn_layers.0.conv_k.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.0.conv_k.bias (192,)
+   text_encoder.encoder.attn_layers.0.conv_v.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.0.conv_v.bias (192,)
+   text_encoder.encoder.attn_layers.0.conv_o.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.0.conv_o.bias (192,)
+   text_encoder.encoder.attn_layers.1.emb_rel_k (1, 9, 96)
+   text_encoder.encoder.attn_layers.1.emb_rel_v (1, 9, 96)
+   text_encoder.encoder.attn_layers.1.conv_q.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.1.conv_q.bias (192,)
+   text_encoder.encoder.attn_layers.1.conv_k.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.1.conv_k.bias (192,)
+   text_encoder.encoder.attn_layers.1.conv_v.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.1.conv_v.bias (192,)
+   text_encoder.encoder.attn_layers.1.conv_o.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.1.conv_o.bias (192,)
+   text_encoder.encoder.attn_layers.2.emb_rel_k (1, 9, 96)
+   text_encoder.encoder.attn_layers.2.emb_rel_v (1, 9, 96)
+   text_encoder.encoder.attn_layers.2.conv_q.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.2.conv_q.bias (192,)
+emb: [('text_encoder.emb.weight', (93, 192)), ('text_encoder.encoder.attn_layers.0.emb_rel_k', (1, 9, 96)), ('text_encoder.encoder.attn_layers.0.emb_rel_v', (1, 9, 96)), ('text_encoder.encoder.attn_layers.1.emb_rel_k', (1, 9, 96)), ('text_encoder.encoder.attn_layers.1.emb_rel_v', (1, 9, 96)), ('text_encoder.encoder.attn_layers.2.emb_rel_k', (1, 9, 96)), ('text_encoder.encoder.attn_layers.2.emb_rel_v', (1, 9, 96)), ('text_encoder.encoder.attn_layers.3.emb_rel_k', (1, 9, 96)), ('text_encoder.encoder.attn_layers.3.emb_rel_v', (1, 9, 96)), ('text_encoder.encoder.attn_layers.4.emb_rel_k', (1, 9, 96))]
+
+==================== REFERENCE (their jit_infer.py) ====================
+reference wav saved: jit.wav
+tokenizer: <extra.TTSTokenizer object at 0x7f58871043d0> config: <class 'extra.VitsConfig'>
+characters class: <class 'extra.VitsCharacters'>
+vocab size: 93
+vocab: ['<PAD>', '!', '¡', "'", '(', ')', ',', '-', '.', ':', ';', '¿', '?', ' ', 'श', 'द', 'ऊ', 'त', 'ओ', 'स', 'ष', 'म', 'र', '़', 'ढ', 'ै', '?', 'ख़', 'ौ', 'क़', 'ड़', 'ः', 'ि', 'अ', 'न', 'ठ', 'य़', 'ज़', 'फ़', '्', 'ख', 'ँ', 'े', '।', 'ं', 'ऋ', 'उ', "'", 'ह', 'छ', 'ङ', 'झ', '"', ' ', 'ु', 'ण', 'औ', 'य', 'घ', 'ञ', 'ृ', 'ए', 'ई', 'ॆ', 'ी', 'प', 'च', 'ॉ', 'ॠ', 'व', 'ग', 'ड', 'ट', 'इ', ',', 'ब', 'ॅ', 'ू', 'ऐ', 'फ', 'ज', 'क', 'ल', 'ग़', 'आ', 'ध', 'ो', 'थ', 'ा', 'भ', 'ढ़', 'ऑ', '<BLNK>']
+Traceback (most recent call last):
+  File "/home/runner/work/time-announcer-voices/time-announcer-voices/vani-hindi/convert.py", line 108, in <module>
+    P("add_blank:", tokenizer.add_blank, "use_eos_bos:", tokenizer.use_eos_bos)
+                    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'TTSTokenizer' object has no attribute 'add_blank'
++ for V in HindiMale:hi_male_vits_30hrs.pt:male HindiFemale:hi_female_vits_30hrs.pt:female
++ IFS=:
++ read -r REPO PT NAME
++ D=work/female
++ mkdir -p work/female
++ for F in chars.txt extra.py jit_infer.py "$PT"
++ curl -sSL --fail --retry 3 -o work/female/chars.txt https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiFemale/resolve/main/chars.txt
++ for F in chars.txt extra.py jit_infer.py "$PT"
++ curl -sSL --fail --retry 3 -o work/female/extra.py https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiFemale/resolve/main/extra.py
++ for F in chars.txt extra.py jit_infer.py "$PT"
++ curl -sSL --fail --retry 3 -o work/female/jit_infer.py https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiFemale/resolve/main/jit_infer.py
++ for F in chars.txt extra.py jit_infer.py "$PT"
++ curl -sSL --fail --retry 3 -o work/female/hi_female_vits_30hrs.pt https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiFemale/resolve/main/hi_female_vits_30hrs.pt
++ ls -la work/female
+total 325496
+drwxr-xr-x 2 runner runner      4096 Oct 12 04:20 .
+drwxr-xr-x 5 runner runner      4096 Oct 12 04:20 ..
+-rw-r--r-- 1 runner runner       225 Oct 12 04:20 chars.txt
+-rw-r--r-- 1 runner runner     26363 Oct 12 04:20 extra.py
+-rw-r--r-- 1 runner runner 333261446 Oct 12 04:20 hi_female_vits_30hrs.pt
+-rw-r--r-- 1 runner runner      1033 Oct 12 04:20 jit_infer.py
++ python vani-hindi/convert.py work/female vani-hindi/out work/release female hi_female_vits_30hrs.pt
+
+==================== FILES ====================
+----- jit_infer.py -----
+import os
+from extra import TTSTokenizer, VitsConfig, CharactersConfig, VitsCharacters
+import torch
+import numpy as np
+
+#ch female
+with open("chars.txt", 'r') as f:
+    letters = f.read().strip('\n')
+model="hi_female_vits_30hrs.pt"
+text = "फिल्म गर्दिश में अमरीश पुरी के साथ जैकी श्रॉफ, ऐश्वर्या, डिंपल कपाड़िया"
+
+config = VitsConfig(
+    text_cleaner="multilingual_cleaners",
+    characters=CharactersConfig(
+        characters_class=VitsCharacters,
+        pad="<PAD>",
+        eos="<EOS>",
+        bos="<BOS>",
+        blank="<BLNK>",
+        characters=letters,
+        punctuations="!¡'(),-.:;¿? ",
+        phonemes=None)
+    )
+tokenizer, config = TTSTokenizer.init_from_config(config)
+
+x = tokenizer.text_to_ids(text)
+x = torch.from_numpy(np.array(x)).unsqueeze(0)
+net = torch.jit.load(model)
+with torch.no_grad():
+    out2 = net(x)
+import soundfile as sf
+sf.write("jit.wav", out2.squeeze().cpu().numpy(), 22050)
+----- extra.py -----
+from typing import Callable, Dict, List, Union
+from dataclasses import asdict, dataclass, field
+
+
+import re
+from dataclasses import replace
+from typing import Dict
+_whitespace_re = re.compile(r"\s+")
+
+from dataclasses import dataclass, field
+from typing import List
+
+# from TTS.tts.configs.shared_configs import BaseTTSConfig
+# from TTS.tts.models.vits import VitsArgs, VitsAudioConfig
+
+@dataclass
+class CharactersConfig():
+
+    characters_class: str = None
+
+    # using BaseVocabulary
+    vocab_dict: Dict = None
+
+    # using on BaseCharacters
+    pad: str = None
+    eos: str = None
+    bos: str = None
+    blank: str = None
+    characters: str = None
+    punctuations: str = None
+    phonemes: str = None
+    is_unique: bool = True  # for backwards compatibility of models trained with char sets with duplicates
+    is_sorted: bool = True
+
+
+@dataclass
+class BaseTTSConfig():
+
+    # audio: BaseAudioConfig = field(default_factory=BaseAudioConfig)
+    # phoneme settings
+    use_phonemes: bool = False
+    phonemizer: str = None
+    phoneme_language: str = None
+    compute_input_seq_cache: bool = False
+    text_cleaner: str = None
+    enable_eos_bos_chars: bool = False
+    test_sentences_file: str = ""
+    phoneme_cache_path: str = None
+    # vocabulary parameters
+    characters: CharactersConfig = None
+    add_blank: bool = False
+    # training params
+    batch_group_size: int = 0
+    loss_masking: bool = None
+    # dataloading
+    min_audio_len: int = 1
+    max_audio_len: int = float("inf")
+    min_text_len: int = 1
+    max_text_len: int = float("inf")
+    compute_f0: bool = False
+    compute_energy: bool = False
+    compute_linear_spec: bool = False
+    precompute_num_workers: int = 0
+    use_noise_augment: bool = False
+    start_by_longest: bool = False
+    shuffle: bool = False
+    drop_last: bool = False
+    # dataset
+    datasets: str = None
+    # optimizer
+    optimizer: str = "radam"
+    optimizer_params: dict = None
+    # scheduler
+    lr_scheduler: str = None
+    lr_scheduler_params: dict = field(default_factory=lambda: {})
+    # testing
+    test_sentences: List[str] = field(default_factory=lambda: [])
+    # evaluation
+    eval_split_max_size: int = None
+    eval_split_size: float = 0.01
+    # weighted samplers
+    use_speaker_weighted_sampler: bool = False
+    speaker_weighted_sampler_alpha: float = 1.0
+    use_language_weighted_sampler: bool = False
+    language_weighted_sampler_alpha: float = 1.0
+    use_length_weighted_sampler: bool = False
+    length_weighted_sampler_alpha: float = 1.0
+
+
+@dataclass
+class VitsAudioConfig():
+    fft_size: int = 1024
+    sample_rate: int = 22050
+    win_length: int = 1024
+    hop_length: int = 256
+    num_mels: int = 80
+    mel_fmin: int = 0
+    mel_fmax: int = None
+    
+@dataclass
+class VitsArgs():
+    num_chars: int = 100
+    out_channels: int = 513
+    spec_segment_size: int = 32
+    hidden_channels: int = 192
+    hidden_channels_ffn_text_encoder: int = 768
+    num_heads_text_encoder: int = 2
+    num_layers_text_encoder: int = 6
+    kernel_size_text_encoder: int = 3
+    dropout_p_text_encoder: float = 0.1
+    dropout_p_duration_predictor: float = 0.5
+    kernel_size_posterior_encoder: int = 5
+    dilation_rate_posterior_encoder: int = 1
+    num_layers_posterior_encoder: int = 16
+    kernel_size_flow: int = 5
+    dilation_rate_flow: int = 1
+    num_layers_flow: int = 4
+    resblock_type_decoder: str = "1"
+    resblock_kernel_sizes_decoder: List[int] = field(default_factory=lambda: [3, 7, 11])
+    resblock_dilation_sizes_decoder: List[List[int]] = field(default_factory=lambda: [[1, 3, 5], [1, 3, 5], [1, 3, 5]])
+    upsample_rates_decoder: List[int] = field(default_factory=lambda: [8, 8, 2, 2])
+    upsample_initial_channel_decoder: int = 512
+    upsample_kernel_sizes_decoder: List[int] = field(default_factory=lambda: [16, 16, 4, 4])
+    periods_multi_period_discriminator: List[int] = field(default_factory=lambda: [2, 3, 5, 7, 11])
+    use_sdp: bool = True
+    noise_scale: float = 1.0
+    inference_noise_scale: float = 0.667
+    length_scale: float = 1
+    noise_scale_dp: float = 1.0
+    inference_noise_scale_dp: float = 1.0
+    max_inference_len: int = None
+    init_discriminator: bool = True
+    use_spectral_norm_disriminator: bool = False
+    use_speaker_embedding: bool = False
+    num_speakers: int = 0
+    speakers_file: str = None
+    d_vector_file: List[str] = None
+    speaker_embedding_channels: int = 256
+    use_d_vector_file: bool = False
+    d_vector_dim: int = 0
+    detach_dp_input: bool = True
+    use_language_embedding: bool = False
+    embedded_language_dim: int = 4
+    num_languages: int = 0
+    language_ids_file: str = None
+    use_speaker_encoder_as_loss: bool = False
+    speaker_encoder_config_path: str = ""
+    speaker_encoder_model_path: str = ""
+    condition_dp_on_speaker: bool = True
+    freeze_encoder: bool = False
+    freeze_DP: bool = False
+    freeze_PE: bool = False
+    freeze_flow_decoder: bool = False
+    freeze_waveform_decoder: bool = False
+    encoder_sample_rate: int = None
+    interpolate_z: bool = True
+    reinit_DP: bool = False
+    reinit_text_encoder: bool = False
+@dataclass
+class VitsConfig(BaseTTSConfig):
+
+    model: str = "vits"
+    # model specific params
+    model_args: VitsArgs = field(default_factory=VitsArgs)
+    audio: VitsAudioConfig = field(default_factory=VitsAudioConfig)
+
+    # optimizer
+    grad_clip: List[float] = field(default_factory=lambda: [1000, 1000])
+    lr_gen: float = 0.0002
+    lr_disc: float = 0.0002
+    lr_scheduler_gen: str = "ExponentialLR"
+    lr_scheduler_gen_params: dict = field(default_factory=lambda: {"gamma": 0.999875, "last_epoch": -1})
+    lr_scheduler_disc: str = "ExponentialLR"
+    lr_scheduler_disc_params: dict = field(default_factory=lambda: {"gamma": 0.999875, "last_epoch": -1})
+    scheduler_after_epoch: bool = True
+    optimizer: str = "AdamW"
+    optimizer_params: dict = field(default_factory=lambda: {"betas": [0.8, 0.99], "eps": 1e-9, "weight_decay": 0.01})
+
+    # loss params
+    kl_loss_alpha: float = 1.0
+    disc_loss_alpha: float = 1.0
+    gen_loss_alpha: float = 1.0
+    feat_loss_alpha: float = 1.0
+    mel_loss_alpha: float = 45.0
+    dur_loss_alpha: float = 1.0
+    speaker_encoder_loss_alpha: float = 1.0
+
+    # data loader params
+    return_wav: bool = True
+    compute_linear_spec: bool = True
+
+    # sampler params
+    use_weighted_sampler: bool = False  # TODO: move it to the base config
+    weighted_sampler_attrs: dict = field(default_factory=lambda: {})
+    weighted_sampler_multipliers: dict = field(default_factory=lambda: {})
+
+    # overrides
+    r: int = 1  # DO NOT CHANGE
+    add_blank: bool = True
+
+    # testing
+    test_sentences: List[List] = field(
+        default_factory=lambda: [
+            ["It took me quite a long time to develop a voice, and now that I have it I'm not going to be silent."],
+            ["Be a voice, not an echo."],
+            ["I'm sorry Dave. I'm afraid I can't do that."],
+            ["This cake is great. It's so delicious and moist."],
+            ["Prior to November 22, 1963."],
+        ]
+    )
+
+    # multi-speaker settings
+    # use speaker embedding layer
+    num_speakers: int = 0
+    use_speaker_embedding: bool = False
+    speakers_file: str = None
+    speaker_embedding_channels: int = 256
+    language_ids_file: str = None
+    use_language_embedding: bool = False
+
+    # use d-vectors
+    use_d_vector_file: bool = False
+    d_vector_file: List[str] = None
+    d_vector_dim: int = None
+
+    def __post_init__(self):
+        pass
+        # for key, val in self.model_args.items():
+        #     if hasattr(self, key):
+        #         self[key] = val
+
+
+
+
+
+def parse_symbols():
+    return {
+        "pad": _pad,
+        "eos": _eos,
+        "bos": _bos,
+        "characters": _characters,
+        "punctuations": _punctuations,
+        "phonemes": _phonemes,
+    }
+
+
+# DEFAULT SET OF GRAPHEMES
+_pad = "<PAD>"
+_eos = "<EOS>"
+_bos = "<BOS>"
+_blank = "<BLNK>"  # TODO: check if we need this alongside with PAD
+_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+_punctuations = "!'(),-.:;? "
+
+
+# DEFAULT SET OF IPA PHONEMES
+# Phonemes definition (All IPA characters)
+_vowels = "iyɨʉɯuɪʏʊeøɘəɵɤoɛœɜɞʌɔæɐaɶɑɒᵻ"
+_non_pulmonic_consonants = "ʘɓǀɗǃʄǂɠǁʛ"
+_pulmonic_consonants = "pbtdʈɖcɟkɡqɢʔɴŋɲɳnɱmʙrʀⱱɾɽɸβfvθðszʃʒʂʐçʝxɣχʁħʕhɦɬɮʋɹɻjɰlɭʎʟ"
+_suprasegmentals = "ˈˌːˑ"
+_other_symbols = "ʍwɥʜʢʡɕʑɺɧʲ"
+_diacrilics = "ɚ˞ɫ"
+_phonemes = _vowels + _non_pulmonic_consonants + _pulmonic_consonants + _suprasegmentals + _other_symbols + _diacrilics
+
+
+class BaseVocabulary:
+    """Base Vocabulary class.
+
+    This class only needs a vocabulary dictionary without specifying the characters.
+
+    Args:
+        vocab (Dict): A dictionary of characters and their corresponding indices.
+    """
+
+    def __init__(self, vocab: Dict, pad: str = None, blank: str = None, bos: str = None, eos: str = None):
+        self.vocab = vocab
+        self.pad = pad
+        self.blank = blank
+        self.bos = bos
+        self.eos = eos
+
+    @property
+    def pad_id(self) -> int:
+        """Return the index of the padding character. If the padding character is not specified, return the length
+        of the vocabulary."""
+        return self.char_to_id(self.pad) if self.pad else len(self.vocab)
+
+    @property
+    def blank_id(self) -> int:
+        """Return the index of the blank character. If the blank character is not specified, return the length of
+        the vocabulary."""
+        return self.char_to_id(self.blank) if self.blank else len(self.vocab)
+
+    @property
+    def bos_id(self) -> int:
+        """Return the index of the bos character. If the bos character is not specified, return the length of the
+        vocabulary."""
+        return self.char_to_id(self.bos) if self.bos else len(self.vocab)
+
+    @property
+    def eos_id(self) -> int:
+        """Return the index of the eos character. If the eos character is not specified, return the length of the
+        vocabulary."""
+        return self.char_to_id(self.eos) if self.eos else len(self.vocab)
+
+    @property
+    def vocab(self):
+        """Return the vocabulary dictionary."""
+        return self._vocab
+
+    @vocab.setter
+    def vocab(self, vocab):
+        """Set the vocabulary dictionary and character mapping dictionaries."""
+        self._vocab, self._char_to_id, self._id_to_char = None, None, None
+        if vocab is not None:
+            self._vocab = vocab
+            self._char_to_id = {char: idx for idx, char in enumerate(self._vocab)}
+            self._id_to_char = {
+                idx: char for idx, char in enumerate(self._vocab)  # pylint: disable=unnecessary-comprehension
+            }
+
+    @staticmethod
+    def init_from_config(config, **kwargs):
+        """Initialize from the given config."""
+        if config.characters is not None and "vocab_dict" in config.characters and config.characters.vocab_dict:
+            return (
+                BaseVocabulary(
+                    config.characters.vocab_dict,
+                    config.characters.pad,
+                    config.characters.blank,
+                    config.characters.bos,
+                    config.characters.eos,
+                ),
+                config,
+            )
+        return BaseVocabulary(**kwargs), config
+
+    def to_config(self):
+        return CharactersConfig(
+            vocab_dict=self._vocab,
+            pad=self.pad,
+            eos=self.eos,
+            bos=self.bos,
+            blank=self.blank,
+            is_unique=False,
+            is_sorted=False,
+        )
+
+    @property
+    def num_chars(self):
+        """Return number of tokens in the vocabulary."""
+        return len(self._vocab)
+
+    def char_to_id(self, char: str) -> int:
+        """Map a character to an token ID."""
+        try:
+            return self._char_to_id[char]
+        except KeyError as e:
+            raise KeyError(f" [!] {repr(char)} is not in the vocabulary.") from e
+
+    def id_to_char(self, idx: int) -> str:
+        """Map an token ID to a character."""
+        return self._id_to_char[idx]
+
+
+class BaseCharacters:
+
+
+    def __init__(
+        self,
+        characters: str = None,
+        punctuations: str = None,
+        pad: str = None,
+        eos: str = None,
+        bos: str = None,
+        blank: str = None,
+        is_unique: bool = False,
+        is_sorted: bool = True,
+    ) -> None:
+        self._characters = characters
+        self._punctuations = punctuations
+        self._pad = pad
+        self._eos = eos
+        self._bos = bos
+        self._blank = blank
+        self.is_unique = is_unique
+        self.is_sorted = is_sorted
+        self._create_vocab()
+
+    @property
+    def pad_id(self) -> int:
+        return self.char_to_id(self.pad) if self.pad else len(self.vocab)
+
+    @property
+    def blank_id(self) -> int:
+        return self.char_to_id(self.blank) if self.blank else len(self.vocab)
+
+    @property
+    def eos_id(self) -> int:
+        return self.char_to_id(self.eos) if self.eos else len(self.vocab)
+
+    @property
+    def bos_id(self) -> int:
+        return self.char_to_id(self.bos) if self.bos else len(self.vocab)
+
+    @property
+    def characters(self):
+        return self._characters
+
+    @characters.setter
+    def characters(self, characters):
+        self._characters = characters
+        self._create_vocab()
+
+    @property
+    def punctuations(self):
+        return self._punctuations
+
+    @punctuations.setter
+    def punctuations(self, punctuations):
+        self._punctuations = punctuations
+        self._create_vocab()
+
+    @property
+    def pad(self):
+        return self._pad
+
+    @pad.setter
+    def pad(self, pad):
+        self._pad = pad
+        self._create_vocab()
+
+    @property
+    def eos(self):
+        return self._eos
+
+    @eos.setter
+    def eos(self, eos):
+        self._eos = eos
+        self._create_vocab()
+
+    @property
+    def bos(self):
+        return self._bos
+
+    @bos.setter
+    def bos(self, bos):
+        self._bos = bos
+        self._create_vocab()
+
+    @property
+    def blank(self):
+        return self._blank
+
+    @blank.setter
+    def blank(self, blank):
+        self._blank = blank
+        self._create_vocab()
+
+    @property
+    def vocab(self):
+        return self._vocab
+
+    @vocab.setter
+    def vocab(self, vocab):
+        self._vocab = vocab
+        self._char_to_id = {char: idx for idx, char in enumerate(self.vocab)}
+        self._id_to_char = {
+            idx: char for idx, char in enumerate(self.vocab)  # pylint: disable=unnecessary-comprehension
+        }
+
+    @property
+    def num_chars(self):
+        return len(self._vocab)
+
+    def _create_vocab(self):
+        _vocab = self._characters
+        if self.is_unique:
+            _vocab = list(set(_vocab))
+        if self.is_sorted:
+            _vocab = sorted(_vocab)
+        _vocab = list(_vocab)
+        _vocab = [self._blank] + _vocab if self._blank is not None and len(self._blank) > 0 else _vocab
+        _vocab = [self._bos] + _vocab if self._bos is not None and len(self._bos) > 0 else _vocab
+        _vocab = [self._eos] + _vocab if self._eos is not None and len(self._eos) > 0 else _vocab
+        _vocab = [self._pad] + _vocab if self._pad is not None and len(self._pad) > 0 else _vocab
+        self.vocab = _vocab + list(self._punctuations)
+        if self.is_unique:
+            duplicates = {x for x in self.vocab if self.vocab.count(x) > 1}
+            assert (
+                len(self.vocab) == len(self._char_to_id) == len(self._id_to_char)
+            ), f" [!] There are duplicate characters in the character set. {duplicates}"
+
+    def char_to_id(self, char: str) -> int:
+        try:
+            return self._char_to_id[char]
+        except KeyError as e:
+            raise KeyError(f" [!] {repr(char)} is not in the vocabulary.") from e
+
+    def id_to_char(self, idx: int) -> str:
+        return self._id_to_char[idx]
+
+    def print_log(self, level: int = 0):
+        """
+        Prints the vocabulary in a nice format.
+        """
+        indent = "\t" * level
+        print(f"{indent}| > Characters: {self._characters}")
+        print(f"{indent}| > Punctuations: {self._punctuations}")
+        print(f"{indent}| > Pad: {self._pad}")
+        print(f"{indent}| > EOS: {self._eos}")
+        print(f"{indent}| > BOS: {self._bos}")
+        print(f"{indent}| > Blank: {self._blank}")
+        print(f"{indent}| > Vocab: {self.vocab}")
+        print(f"{indent}| > Num chars: {self.num_chars}")
+
+    @staticmethod
+    def init_from_config(config: "Coqpit"):  # pylint: disable=unused-argument
+        """Init your character class from a config.
+
+        Implement this method for your subclass.
+        """
+        # use character set from config
+        if config.characters is not None:
+            return BaseCharacters(**config.characters), config
+        # return default character set
+        characters = BaseCharacters()
+        new_config = replace(config, characters=characters.to_config())
+        return characters, new_config
+
+    def to_config(self) -> "CharactersConfig":
+        return CharactersConfig(
+            characters=self._characters,
+            punctuations=self._punctuations,
+            pad=self._pad,
+            eos=self._eos,
+            bos=self._bos,
+            blank=self._blank,
+            is_unique=self.is_unique,
+            is_sorted=self.is_sorted,
+        )
+
+
+class IPAPhonemes(BaseCharacters):
+ 
+
+    def __init__(
+        self,
+        characters: str = _phonemes,
+        punctuations: str = _punctuations,
+        pad: str = _pad,
+        eos: str = _eos,
+        bos: str = _bos,
+        blank: str = _blank,
+        is_unique: bool = False,
+        is_sorted: bool = True,
+    ) -> None:
+        super().__init__(characters, punctuations, pad, eos, bos, blank, is_unique, is_sorted)
+
+    @staticmethod
+    def init_from_config(config: "Coqpit"):
+        """Init a IPAPhonemes object from a model config
+
+        If characters are not defined in the config, it will be set to the default characters and the config
+        will be updated.
+        """
+        # band-aid for compatibility with old models
+        if "characters" in config and config.characters is not None:
+            if "phonemes" in config.characters and config.characters.phonemes is not None:
+                config.characters["characters"] = config.characters["phonemes"]
+            return (
+                IPAPhonemes(
+                    characters=config.characters["characters"],
+                    punctuations=config.characters["punctuations"],
+                    pad=config.characters["pad"],
+                    eos=config.characters["eos"],
+                    bos=config.characters["bos"],
+                    blank=config.characters["blank"],
+                    is_unique=config.characters["is_unique"],
+                    is_sorted=config.characters["is_sorted"],
+                ),
+                config,
+            )
+        # use character set from config
+        if config.characters is not None:
+            return IPAPhonemes(**config.characters), config
+        # return default character set
+        characters = IPAPhonemes()
+        new_config = replace(config, characters=characters.to_config())
+        return characters, new_config
+
+
+class Graphemes(BaseCharacters):
+ 
+
+    def __init__(
+        self,
+        characters: str = _characters,
+        punctuations: str = _punctuations,
+        pad: str = _pad,
+        eos: str = _eos,
+        bos: str = _bos,
+        blank: str = _blank,
+        is_unique: bool = False,
+        is_sorted: bool = True,
+    ) -> None:
+        super().__init__(characters, punctuations, pad, eos, bos, blank, is_unique, is_sorted)
+
+    @staticmethod
+    def init_from_config(config: "Coqpit"):
+        """Init a Graphemes object from a model config
+
+        If characters are not defined in the config, it will be set to the default characters and the config
+        will be updated.
+        """
+        if config.characters is not None:
+            # band-aid for compatibility with old models
+            if "phonemes" in config.characters:
+                return (
+                    Graphemes(
+                        characters=config.characters["characters"],
+                        punctuations=config.characters["punctuations"],
+                        pad=config.characters["pad"],
+                        eos=config.characters["eos"],
+                        bos=config.characters["bos"],
+                        blank=config.characters["blank"],
+                        is_unique=config.characters["is_unique"],
+                        is_sorted=config.characters["is_sorted"],
+                    ),
+                    config,
+                )
+            return Graphemes(**config.characters), config
+        characters = Graphemes()
+        new_config = replace(config, characters=characters.to_config())
+        return characters, new_config
+
+
+if __name__ == "__main__":
+    gr = Graphemes()
+    ph = IPAPhonemes()
+    gr.print_log()
+    ph.print_log()
+
+
+class VitsCharacters(BaseCharacters):
+    """Characters class for VITs model for compatibility with pre-trained models"""
+
+    def __init__(
+        self,
+        graphemes: str = _characters,
+        punctuations: str = _punctuations,
+        pad: str = _pad,
+        ipa_characters: str = _phonemes,
+    ) -> None:
+        if ipa_characters is not None:
+            graphemes += ipa_characters
+        super().__init__(graphemes, punctuations, pad, None, None, "<BLNK>", is_unique=False, is_sorted=True)
+
+    def _create_vocab(self):
+        self._vocab = [self._pad] + list(self._punctuations) + list(self._characters) + [self._blank]
+        self._char_to_id = {char: idx for idx, char in enumerate(self.vocab)}
+        # pylint: disable=unnecessary-comprehension
+        self._id_to_char = {idx: char for idx, char in enumerate(self.vocab)}
+
+    @staticmethod
+    def init_from_config(config):
+        _pad = config.characters.pad
+        _punctuations = config.characters.punctuations
+        _letters = config.characters.characters
+        _letters_ipa = config.characters.phonemes
+        return (
+            VitsCharacters(graphemes=_letters, ipa_characters=_letters_ipa, punctuations=_punctuations, pad=_pad),
+            config,
+        )
+
+    def to_config(self) -> "CharactersConfig":
+        return CharactersConfig(
+            characters=self._characters,
+            punctuations=self._punctuations,
+            pad=self._pad,
+            eos=None,
+            bos=None,
+            blank=self._blank,
+            is_unique=False,
+            is_sorted=True,
+        )
+        
+class TTSTokenizer:
+    def __init__(
+        self,
+        text_cleaner: Callable = None,
+        characters: "BaseCharacters" = None,
+    ):
+        self.text_cleaner = text_cleaner
+        self.characters = characters
+        self.not_found_characters = []
+
+    @property
+    def characters(self):
+        return self._characters
+
+    @characters.setter
+    def characters(self, new_characters):
+        self._characters = new_characters
+        self.pad_id = self.characters.char_to_id(self.characters.pad) if self.characters.pad else None
+        self.blank_id = self.characters.char_to_id(self.characters.blank) if self.characters.blank else None
+
+    def encode(self, text: str) -> List[int]:
+        """Encodes a string of text as a sequence of IDs."""
+        token_ids = []
+        for char in text:
+            try:
+                idx = self.characters.char_to_id(char)
+                token_ids.append(idx)
+            except KeyError:
+                # discard but store not found characters
+                if char not in self.not_found_characters:
+                    self.not_found_characters.append(char)
+                    print(text)
+                    print(f" [!] Character {repr(char)} not found in the vocabulary. Discarding it.")
+        return token_ids
+
+    def text_to_ids(self, text: str, language: str = None) -> List[int]:  # pylint: disable=unused-argument
+        text = self.text_cleaner(text)
+        text = self.encode(text)
+        text = self.intersperse_blank_char(text, True)
+        return text
+
+    def pad_with_bos_eos(self, char_sequence: List[str]):
+        """Pads a sequence with the special BOS and EOS characters."""
+        return [self.characters.bos_id] + list(char_sequence) + [self.characters.eos_id]
+
+    def intersperse_blank_char(self, char_sequence: List[str], use_blank_char: bool = False):
+        """Intersperses the blank character between characters in a sequence.
+
+        Use the ```blank``` character if defined else use the ```pad``` character.
+        """
+        char_to_use = self.characters.blank_id if use_blank_char else self.characters.pad
+        result = [char_to_use] * (len(char_sequence) * 2 + 1)
+        result[1::2] = char_sequence
+        return result
+
+    @staticmethod
+    def init_from_config(config: "Coqpit", characters: "BaseCharacters" = None):
+        text_cleaner = multilingual_cleaners
+        CharactersClass = VitsCharacters
+        characters, new_config = CharactersClass.init_from_config(config)
+        # new_config.characters.characters_class = get_import_path(characters)
+        new_config.characters.characters_class = VitsCharacters
+        return (
+            TTSTokenizer(text_cleaner, characters),new_config)
+
+
+def multilingual_cleaners(text):
+    """Pipeline for multilingual text"""
+    text = lowercase(text)
+    text = replace_symbols(text, lang=None)
+    text = remove_aux_symbols(text)
+    text = collapse_whitespace(text)
+    return text
+
+def lowercase(text):
+    return text.lower()
+
+def collapse_whitespace(text):
+    return re.sub(_whitespace_re, " ", text).strip()
+
+def replace_symbols(text, lang="en"):
+
+    text = text.replace(";", ",")
+    text = text.replace("-", " ") if lang != "ca" else text.replace("-", "")
+    text = text.replace(":", ",")
+    if lang == "en":
+        text = text.replace("&", " and ")
+    elif lang == "fr":
+        text = text.replace("&", " et ")
+    elif lang == "pt":
+        text = text.replace("&", " e ")
+    elif lang == "ca":
+        text = text.replace("&", " i ")
+        text = text.replace("'", "")
+    return text
+
+def remove_aux_symbols(text):
+    text = re.sub(r"[\<\>\(\)\[\]\"]+", "", text)
+    return text
+chars.txt repr: 'शदऊतसओषमऱढै?ख़ौक़ड़ःिअनठय़ज़फ़्खँे।ंऋउ\'हछङझ" ुणऔघयञृएईॆीपचॉॠवगडटइ,बॅूऐफकजलग़आधोथाभढ़ऑ\n'
+
+==================== JIT MODEL ====================
+type: <class 'torch.jit._script.RecursiveScriptModule'> original_name: Vits
+forward schema: forward(__torch__.inference_model.Vits self, Tensor x) -> Tensor
+child: text_encoder TextEncoder
+child: posterior_encoder PosteriorEncoder
+child: flow ResidualCouplingBlocks
+child: duration_predictor StochasticDurationPredictor
+child: waveform_decoder HifiganGenerator
+child: disc VitsDiscriminator
+CODE:
+ def forward(self,
+    x: Tensor) -> Tensor:
+  waveform_decoder = self.waveform_decoder
+  flow = self.flow
+  duration_predictor = self.duration_predictor
+  text_encoder = self.text_encoder
+  _0 = torch.to(CONSTANTS.c0, torch.device("cpu"), 4)
+  x_lengths = torch.to(torch.detach(_0), dtype=4, layout=0, device=torch.device("cpu"))
+  _1 = (text_encoder).forward(x, x_lengths, )
+  _2, _3, _4, _5, = _1
+  _6 = (duration_predictor).forward(_2, _3, )
+  w = torch.mul(torch.mul(torch.exp(_6), _3), CONSTANTS.c1)
+  w_ceil = torch.ceil(w)
+  _7 = torch.clamp_min(torch.sum(w_ceil, [1, 2]), 1)
+  sequence_length = torch.to(_7, 4)
+  max_len = torch.max(sequence_length)
+  seq_range = torch.arange(annotate(number, max_len), dtype=4, layout=None, device=torch.device("cpu"), pin_memory=False)
+  _8 = torch.lt(torch.unsqueeze(seq_range, 0), torch.unsqueeze(sequence_length, 1))
+  y_mask = torch.unsqueeze(torch.to(_8, 6), 1)
+  attn_mask = torch.mul(_3, torch.transpose(y_mask, 1, 2))
+  duration = torch.squeeze(w_ceil, 1)
+  mask = torch.transpose(torch.squeeze(attn_mask, 1), 1, 2)
+  b = ops.prim.NumToTensor(torch.size(mask, 0))
+  _9 = int(b)
+  t_x = ops.prim.NumToTensor(torch.size(mask, 1))
+  _10 = int(t_x)
+  max_len0 = ops.prim.NumToTensor(torch.size(mask, 2))
+  _11 = int(max_len0)
+  _12 = annotate(number, max_len0)
+  cum_duration = torch.cumsum(duration, 1)
+  sequence_length0 = torch.view(cum_duration, [int(torch.mul(b, t_x))])
+  seq_range0 = torch.arange(_12, dtype=6, layout=None, device=torch.device("cpu"), pin_memory=False)
+  _13 = torch.lt(torch.unsqueeze(seq_range0, 0), torch.unsqueeze(sequence_length0, 1))
+  path = torch.to(_13, 6)
+  path0 = torch.view(path, [_9, _10, _11])
+  _14 = torch.slice(torch.pad(path0, [0, 0, 1, 0, 0, 0]), 0, 0, 9223372036854775807)
+  path1 = torch.sub(path0, torch.slice(_14, 1, 0, -1))
+  attn = torch.mul(path1, mask)
+  _15 = torch.matmul(torch.transpose(attn, 1, 2), torch.transpose(_4, 1, 2))
+  m_p = torch.transpose(_15, 1, 2)
+  _16 = torch.matmul(torch.transpose(attn, 1, 2), torch.transpose(_5, 1, 2))
+  logs_p = torch.transpose(_16, 1, 2)
+  _17 = torch.randn_like(m_p, dtype=6, layout=0, device=torch.device("cpu"), pin_memory=False)
+  _18 = torch.mul(torch.mul(_17, torch.exp(logs_p)), CONSTANTS.c2)
+  x0 = torch.add(m_p, _18)
+  _19 = torch.mul((flow).forward(x0, y_mask, ), y_mask)
+  _20 = torch.slice(_19, 0, 0, 9223372036854775807)
+  _21 = torch.slice(_20, 1, 0, 9223372036854775807)
+  input = torch.slice(_21, 2, 0, 9223372036854775807)
+  return (waveform_decoder).forward(input, )
+
+tensors: 949 numel: 83051884
+prefixes: Counter({'duration_predictor': 284, 'waveform_decoder': 231, 'flow': 112, 'text_encoder': 111, 'disc': 111, 'posterior_encoder': 100})
+   text_encoder.emb.weight (93, 192)
+   text_encoder.encoder.attn_layers.0.emb_rel_k (1, 9, 96)
+   text_encoder.encoder.attn_layers.0.emb_rel_v (1, 9, 96)
+   text_encoder.encoder.attn_layers.0.conv_q.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.0.conv_q.bias (192,)
+   text_encoder.encoder.attn_layers.0.conv_k.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.0.conv_k.bias (192,)
+   text_encoder.encoder.attn_layers.0.conv_v.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.0.conv_v.bias (192,)
+   text_encoder.encoder.attn_layers.0.conv_o.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.0.conv_o.bias (192,)
+   text_encoder.encoder.attn_layers.1.emb_rel_k (1, 9, 96)
+   text_encoder.encoder.attn_layers.1.emb_rel_v (1, 9, 96)
+   text_encoder.encoder.attn_layers.1.conv_q.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.1.conv_q.bias (192,)
+   text_encoder.encoder.attn_layers.1.conv_k.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.1.conv_k.bias (192,)
+   text_encoder.encoder.attn_layers.1.conv_v.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.1.conv_v.bias (192,)
+   text_encoder.encoder.attn_layers.1.conv_o.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.1.conv_o.bias (192,)
+   text_encoder.encoder.attn_layers.2.emb_rel_k (1, 9, 96)
+   text_encoder.encoder.attn_layers.2.emb_rel_v (1, 9, 96)
+   text_encoder.encoder.attn_layers.2.conv_q.weight (192, 192, 1)
+   text_encoder.encoder.attn_layers.2.conv_q.bias (192,)
+emb: [('text_encoder.emb.weight', (93, 192)), ('text_encoder.encoder.attn_layers.0.emb_rel_k', (1, 9, 96)), ('text_encoder.encoder.attn_layers.0.emb_rel_v', (1, 9, 96)), ('text_encoder.encoder.attn_layers.1.emb_rel_k', (1, 9, 96)), ('text_encoder.encoder.attn_layers.1.emb_rel_v', (1, 9, 96)), ('text_encoder.encoder.attn_layers.2.emb_rel_k', (1, 9, 96)), ('text_encoder.encoder.attn_layers.2.emb_rel_v', (1, 9, 96)), ('text_encoder.encoder.attn_layers.3.emb_rel_k', (1, 9, 96)), ('text_encoder.encoder.attn_layers.3.emb_rel_v', (1, 9, 96)), ('text_encoder.encoder.attn_layers.4.emb_rel_k', (1, 9, 96))]
+
+==================== REFERENCE (their jit_infer.py) ====================
+reference wav saved: jit.wav
+tokenizer: <extra.TTSTokenizer object at 0x7f77fd79d810> config: <class 'extra.VitsConfig'>
+characters class: <class 'extra.VitsCharacters'>
+vocab size: 93
+vocab: ['<PAD>', '!', '¡', "'", '(', ')', ',', '-', '.', ':', ';', '¿', '?', ' ', 'श', 'द', 'ऊ', 'त', 'स', 'ओ', 'ष', 'म', 'र', '़', 'ढ', 'ै', '?', 'ख़', 'ौ', 'क़', 'ड़', 'ः', 'ि', 'अ', 'न', 'ठ', 'य़', 'ज़', 'फ़', '्', 'ख', 'ँ', 'े', '।', 'ं', 'ऋ', 'उ', "'", 'ह', 'छ', 'ङ', 'झ', '"', ' ', 'ु', 'ण', 'औ', 'घ', 'य', 'ञ', 'ृ', 'ए', 'ई', 'ॆ', 'ी', 'प', 'च', 'ॉ', 'ॠ', 'व', 'ग', 'ड', 'ट', 'इ', ',', 'ब', 'ॅ', 'ू', 'ऐ', 'फ', 'क', 'ज', 'ल', 'ग़', 'आ', 'ध', 'ो', 'थ', 'ा', 'भ', 'ढ़', 'ऑ', '<BLNK>']
+Traceback (most recent call last):
+  File "/home/runner/work/time-announcer-voices/time-announcer-voices/vani-hindi/convert.py", line 108, in <module>
+    P("add_blank:", tokenizer.add_blank, "use_eos_bos:", tokenizer.use_eos_bos)
+                    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'TTSTokenizer' object has no attribute 'add_blank'
++ ls -la vani-hindi/out work/release
+vani-hindi/out:
+total 660
+drwxr-xr-x 2 runner runner   4096 Oct 12 04:20 .
+drwxr-xr-x 4 runner runner   4096 Oct 12 04:19 ..
+-rw-r--r-- 1 runner runner  33884 Oct 12 04:20 female-convert-log.txt
+-rw-r--r-- 1 runner runner 251436 Oct 12 04:20 female-reference-jit.wav
+-rw-r--r-- 1 runner runner  33882 Oct 12 04:20 male-convert-log.txt
+-rw-r--r-- 1 runner runner 262188 Oct 12 04:20 male-reference-jit.wav
+-rw-r--r-- 1 runner runner  72084 Oct 12 04:20 run-log.txt
+
+work/release:
+total 8
+drwxr-xr-x 2 runner runner 4096 Oct 12 04:19 .
+drwxr-xr-x 5 runner runner 4096 Oct 12 04:20 ..

@@ -4,9 +4,11 @@ set -x
 cd "$GITHUB_WORKSPACE"
 
 python -m pip install --upgrade pip -q
-printf 'torch==2.4.1\ntorchaudio==2.4.1\n' > /tmp/constraints.txt
-pip install -q torch==2.4.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cpu
+printf 'torch==2.8.0\ntorchaudio==2.8.0\n' > /tmp/constraints.txt
+pip install -q torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cpu
 pip install -q -c /tmp/constraints.txt coqui-tts onnx onnxruntime sherpa-onnx soundfile
+python -c 'import torch, torchaudio; print("torch ok", torch.__version__, torchaudio.__version__)'
+python -c 'import TTS; from TTS.tts.models.vits import Vits; print("coqui ok", hasattr(Vits, "export_onnx"))'
 pip list 2>/dev/null | grep -i -E '^(torch|torchaudio|coqui|onnx|onnxruntime|numpy|transformers|sherpa)'
 
 for V in HindiMale:hi_male_vits_30hrs.pt:male HindiFemale:hi_female_vits_30hrs.pt:female; do

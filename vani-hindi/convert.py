@@ -62,7 +62,12 @@ try:
     for n, c in jit.named_children():
         P("child:", n, getattr(c, "original_name", type(c)))
     try:
-        P("CODE:\n", jit.code[:8000])
+        cm = jit.code_with_constants[1].const_mapping
+        P("CONSTANTS:", {k: (v.tolist() if hasattr(v, "tolist") else v) for k, v in cm.items()})
+    except Exception as e:
+        P("const err:", e)
+    try:
+        P("CODE:\n", jit.code[:3000])
     except Exception as e:
         P("code err:", e)
     sd = jit.state_dict()
@@ -105,7 +110,10 @@ if tokenizer is not None:
     P("characters class:", type(ch))
     P("vocab size:", len(ch.vocab))
     P("vocab:", ch.vocab)
-    P("add_blank:", tokenizer.add_blank, "use_eos_bos:", tokenizer.use_eos_bos)
+    # SYSPIN ka apna tokenizer: hamesha blank daalta hai, BOS/EOS nahi
+    ADD_BLANK = bool(getattr(tokenizer, "add_blank", True))
+    USE_EOS_BOS = bool(getattr(tokenizer, "use_eos_bos", False))
+    P("add_blank:", ADD_BLANK, "use_eos_bos:", USE_EOS_BOS)
     for a in ("pad", "eos", "bos", "blank", "punctuations"):
         P(a, repr(getattr(ch, a, None)))
     for a in ("pad_id", "eos_id", "bos_id", "blank_id"):
@@ -136,38 +144,14 @@ try:
     from TTS.tts.configs.vits_config import VitsConfig
     from TTS.tts.models.vits import Vits
 
-    cfg = config if isinstance(config, VitsConfig) else VitsConfig()
-    if tokenizer is not None and not isinstance(config, VitsConfig):
-        cfg.characters = tokenizer.characters.to_config()
+    cfg = VitsConfig()
     cfg.model_args.init_discriminator = False
-    SR = int(cfg.audio.sample_rate)
-
-    # agar state_dict ke keys par koi prefix hai to hata do
-    keys = list(sd)
+    SR = 22050
     tsd = sd
-    if keys and not any(k.startswith("text_encoder.") for k in keys):
-        for pre in ("model.", "module.", "vits.", "net."):
-            if any(k.startswith(pre + "text_encoder.") for k in keys):
-                tsd = {k[len(pre):]: v for k, v in sd.items() if k.startswith(pre)}
-                P("stripped prefix:", pre)
-                break
     emb = tsd.get("text_encoder.emb.weight")
-    if emb is not None:
-        cfg.model_args.num_chars = int(emb.shape[0])
-        P("num_chars from weights:", emb.shape[0])
-
-    model = Vits.init_from_config(cfg)
-    if emb is not None and model.text_encoder.emb.weight.shape[0] != emb.shape[0]:
-        P("rebuilding text encoder for num_chars", emb.shape[0])
-        model.args.num_chars = int(emb.shape[0])
-        from TTS.tts.layers.vits.networks import TextEncoder
-        a = model.args
-        model.text_encoder = TextEncoder(
-            a.num_chars, a.hidden_channels, a.hidden_channels,
-            a.hidden_channels_ffn_text_encoder, a.num_heads_text_encoder,
-            a.num_layers_text_encoder, a.kernel_size_text_encoder,
-            a.dropout_p_text_encoder,
-            language_emb_dim=model.embedded_language_dim)
+    cfg.model_args.num_chars = int(emb.shape[0])
+    P("num_chars from weights:", emb.shape[0])
+    model = Vits(config=cfg)
     res = model.load_state_dict(tsd, strict=False)
     P("missing keys:", len(res.missing_keys), res.missing_keys[:40])
     P("unexpected keys:", len(res.unexpected_keys), res.unexpected_keys[:40])
@@ -205,12 +189,10 @@ def add_meta(path):
         "comment": "coqui",
         "language": "Hindi",
         "voice": f"syspin-hi-{name}",
-        "add_blank": int(bool(tokenizer.add_blank)),
+        "add_blank": int(ADD_BLANK),
         "n_speakers": 1,
         "sample_rate": SR,
-        "use_eos_bos": int(bool(tokenizer.use_eos_bos)),
-        "bos_id": int(ch.bos_id) if ch.bos else 0,
-        "eos_id": int(ch.eos_id) if ch.eos else 0,
+        "use_eos_bos": int(USE_EOS_BOS),
         "blank_id": int(ch.blank_id) if ch.blank else 0,
         "pad_id": int(ch.pad_id) if ch.pad else 0,
         "frontend": "characters",

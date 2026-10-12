@@ -1,24 +1,12 @@
 + cd /home/runner/work/time-announcer-voices/time-announcer-voices
 + python -m pip install --upgrade pip -q
-+ printf 'torch==2.8.0\ntorchaudio==2.8.0\n'
++ printf 'torch==2.8.0\ntorchaudio==2.8.0\ntransformers<5\n'
 + pip install -q torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cpu
 + pip install -q -c /tmp/constraints.txt coqui-tts onnx onnxruntime sherpa-onnx soundfile
 + python -c 'import torch, torchaudio; print("torch ok", torch.__version__, torchaudio.__version__)'
 torch ok 2.8.0+cpu 2.8.0+cpu
 + python -c 'import TTS; from TTS.tts.models.vits import Vits; print("coqui ok", hasattr(Vits, "export_onnx"))'
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/__init__.py", line 35, in <module>
-    from TTS.tts.configs.xtts_config import XttsConfig
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/configs/xtts_config.py", line 4, in <module>
-    from TTS.tts.models.xtts import XttsArgs, XttsAudioConfig
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/models/xtts.py", line 15, in <module>
-    from TTS.tts.layers.xtts.gpt import GPT
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/xtts/gpt.py", line 10, in <module>
-    from TTS.tts.layers.tortoise.autoregressive import (
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/tortoise/autoregressive.py", line 12, in <module>
-    from transformers.pytorch_utils import isin_mps_friendly as isin
-ImportError: cannot import name 'isin_mps_friendly' from 'transformers.pytorch_utils' (/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/transformers/pytorch_utils.py)
+coqui ok True
 + pip list
 + grep -i -E '^(torch|torchaudio|coqui|onnx|onnxruntime|numpy|transformers|sherpa)'
 coqui-tts                  0.27.5
@@ -30,7 +18,7 @@ sherpa_onnx                1.13.8
 sherpa-onnx-core           1.13.8
 torch                      2.8.0+cpu
 torchaudio                 2.8.0+cpu
-transformers               5.19.0
+transformers               4.57.6
 + for V in HindiMale:hi_male_vits_30hrs.pt:male HindiFemale:hi_female_vits_30hrs.pt:female
 + IFS=:
 + read -r REPO PT NAME
@@ -46,12 +34,12 @@ transformers               5.19.0
 + curl -sSL --fail --retry 3 -o work/male/hi_male_vits_30hrs.pt https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiMale/resolve/main/hi_male_vits_30hrs.pt
 + ls -la work/male
 total 325492
-drwxr-xr-x 2 runner runner      4096 Oct 12 04:25 .
-drwxr-xr-x 4 runner runner      4096 Oct 12 04:25 ..
--rw-r--r-- 1 runner runner       225 Oct 12 04:25 chars.txt
--rw-r--r-- 1 runner runner     26363 Oct 12 04:25 extra.py
--rw-r--r-- 1 runner runner 333256012 Oct 12 04:26 hi_male_vits_30hrs.pt
--rw-r--r-- 1 runner runner      1031 Oct 12 04:25 jit_infer.py
+drwxr-xr-x 2 runner runner      4096 Oct 12 04:28 .
+drwxr-xr-x 4 runner runner      4096 Oct 12 04:28 ..
+-rw-r--r-- 1 runner runner       225 Oct 12 04:28 chars.txt
+-rw-r--r-- 1 runner runner     26363 Oct 12 04:28 extra.py
+-rw-r--r-- 1 runner runner 333256012 Oct 12 04:28 hi_male_vits_30hrs.pt
+-rw-r--r-- 1 runner runner      1031 Oct 12 04:28 jit_infer.py
 + python vani-hindi/convert.py work/male vani-hindi/out work/release male hi_male_vits_30hrs.pt
 
 ==================== FILES ====================
@@ -971,7 +959,7 @@ emb: [('text_encoder.emb.weight', (93, 192)), ('text_encoder.encoder.attn_layers
 
 ==================== REFERENCE (their jit_infer.py) ====================
 reference wav saved: jit.wav
-tokenizer: <extra.TTSTokenizer object at 0x7f4ebb7f1050> config: <class 'extra.VitsConfig'>
+tokenizer: <extra.TTSTokenizer object at 0x7fbe44984a10> config: <class 'extra.VitsConfig'>
 characters class: <class 'extra.VitsCharacters'>
 vocab size: 93
 vocab: ['<PAD>', '!', '¡', "'", '(', ')', ',', '-', '.', ':', ';', '¿', '?', ' ', 'श', 'द', 'ऊ', 'त', 'ओ', 'स', 'ष', 'म', 'र', '़', 'ढ', 'ै', '?', 'ख़', 'ौ', 'क़', 'ड़', 'ः', 'ि', 'अ', 'न', 'ठ', 'य़', 'ज़', 'फ़', '्', 'ख', 'ँ', 'े', '।', 'ं', 'ऋ', 'उ', "'", 'ह', 'छ', 'ङ', 'झ', '"', ' ', 'ु', 'ण', 'औ', 'य', 'घ', 'ञ', 'ृ', 'ए', 'ई', 'ॆ', 'ी', 'प', 'च', 'ॉ', 'ॠ', 'व', 'ग', 'ड', 'ट', 'इ', ',', 'ब', 'ॅ', 'ू', 'ऐ', 'फ', 'ज', 'क', 'ल', 'ग़', 'आ', 'ध', 'ो', 'थ', 'ा', 'भ', 'ढ़', 'ऑ', '<BLNK>']
@@ -985,32 +973,1013 @@ pad_id 0
 eos_id 93
 bos_id 93
 blank_id 92
-cleaner: <function multilingual_cleaners at 0x7f4ea963d1c0>
+cleaner: <function multilingual_cleaners at 0x7fbe3053cf40>
 test ids: [92, 34, 92, 21, 92, 19, 92, 39, 92, 17, 92, 42, 92, 74, 92, 53, 92, 21, 92, 25, 92, 44, 92, 53, 92, 69, 92, 88, 92, 55, 92, 64, 92, 53, 92, 81, 92, 64, 92, 53, 92, 34, 92, 62, 92, 53, 92, 48, 92, 32, 92, 44, 92, 15, 92, 64, 92, 53, 92, 84, 92, 69, 92, 88, 92, 80, 92, 23, 92, 53, 92, 48, 92, 77, 92, 41, 92, 43, 92, 53, 92, 84, 92, 80, 92, 53, 92, 21, 92, 28, 92, 19, 92, 21, 92, 53, 92, 75, 92, 48, 92, 54, 92, 17, 92, 53, 92, 33, 92, 66, 92, 39, 92, 49, 92, 88, 92, 53, 92, 48, 92, 25, 92, 74, 92, 53, 92, 56, 92, 22, 92, 53, 92, 33, 92, 89, 92, 64, 92, 53, 92, 19, 92, 54, 92, 75, 92, 48, 92, 53, 92, 81, 92, 42, 92, 53, 92, 15, 92, 19, 92, 53, 92, 75, 92, 80, 92, 81, 92, 22, 92, 53, 92, 65, 92, 44, 92, 15, 92, 39, 92, 22, 92, 48, 92, 53, 92, 21, 92, 32, 92, 34, 92, 72, 92, 53, 92, 48, 92, 54, 92, 61, 92, 53, 92, 48, 92, 25, 92, 44, 92, 43, 92]
 config.add_blank: True enable_eos_bos_chars: False text_cleaner: multilingual_cleaners
 sample_rate: 22050
 model_args: VitsArgs(num_chars=100, out_channels=513, spec_segment_size=32, hidden_channels=192, hidden_channels_ffn_text_encoder=768, num_heads_text_encoder=2, num_layers_text_encoder=6, kernel_size_text_encoder=3, dropout_p_text_encoder=0.1, dropout_p_duration_predictor=0.5, kernel_size_posterior_encoder=5, dilation_rate_posterior_encoder=1, num_layers_posterior_encoder=16, kernel_size_flow=5, dilation_rate_flow=1, num_layers_flow=4, resblock_type_decoder='1', resblock_kernel_sizes_decoder=[3, 7, 11], resblock_dilation_sizes_decoder=[[1, 3, 5], [1, 3, 5], [1, 3, 5]], upsample_rates_decoder=[8, 8, 2, 2], upsample_initial_channel_decoder=512, upsample_kernel_sizes_decoder=[16, 16, 4, 4], periods_multi_period_discriminator=[2, 3, 5, 7, 11], use_sdp=True, noise_scale=1.0, inference_noise_scale=0.667, length_scale=1, noise_scale_dp=1.0, inference_noise_scale_dp=1.0, max_inference_len=None, init_discriminator=True, use_spectral_norm_disriminator=False, use_speaker_embedding=False, num_speakers=0, speakers_file=None, d_vector_file=None, speaker_embedding_channels=256, use_d_vector_file=False, d_vector_dim=0, detach_dp_input=True, use_language_embedding=False, embedded_language_dim=4, num_languages=0, language_ids_file=None, use_speaker_encoder_as_loss=False, speaker_encoder_config_path='', speaker_encoder_model_path='', condition_dp_on_speaker=True, freeze_encoder=False, freeze_DP=False, freeze_PE=False, freeze_flow_decoder=False, freeze_waveform_decoder=False, encoder_sample_rate=None, interpolate_z=True, reinit_DP=False, reinit_text_encoder=False)
 
 ==================== COQUI VITS + WEIGHTS ====================
-Traceback (most recent call last):
-  File "/home/runner/work/time-announcer-voices/time-announcer-voices/vani-hindi/convert.py", line 144, in <module>
-    from TTS.tts.configs.vits_config import VitsConfig
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/__init__.py", line 35, in <module>
-    from TTS.tts.configs.xtts_config import XttsConfig
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/configs/xtts_config.py", line 4, in <module>
-    from TTS.tts.models.xtts import XttsArgs, XttsAudioConfig
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/models/xtts.py", line 15, in <module>
-    from TTS.tts.layers.xtts.gpt import GPT
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/xtts/gpt.py", line 10, in <module>
-    from TTS.tts.layers.tortoise.autoregressive import (
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/tortoise/autoregressive.py", line 12, in <module>
-    from transformers.pytorch_utils import isin_mps_friendly as isin
-ImportError: cannot import name 'isin_mps_friendly' from 'transformers.pytorch_utils' (/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/transformers/pytorch_utils.py)
-
+num_chars from weights: 93
+missing keys: 0 []
+unexpected keys: 111 ['disc.nets.0.convs.0.bias', 'disc.nets.0.convs.0.weight_g', 'disc.nets.0.convs.0.weight_v', 'disc.nets.0.convs.1.bias', 'disc.nets.0.convs.1.weight_g', 'disc.nets.0.convs.1.weight_v', 'disc.nets.0.convs.2.bias', 'disc.nets.0.convs.2.weight_g', 'disc.nets.0.convs.2.weight_v', 'disc.nets.0.convs.3.bias', 'disc.nets.0.convs.3.weight_g', 'disc.nets.0.convs.3.weight_v', 'disc.nets.0.convs.4.bias', 'disc.nets.0.convs.4.weight_g', 'disc.nets.0.convs.4.weight_v', 'disc.nets.0.convs.5.bias', 'disc.nets.0.convs.5.weight_g', 'disc.nets.0.convs.5.weight_v', 'disc.nets.0.conv_post.bias', 'disc.nets.0.conv_post.weight_g', 'disc.nets.0.conv_post.weight_v', 'disc.nets.1.convs.0.bias', 'disc.nets.1.convs.0.weight_g', 'disc.nets.1.convs.0.weight_v', 'disc.nets.1.convs.1.bias', 'disc.nets.1.convs.1.weight_g', 'disc.nets.1.convs.1.weight_v', 'disc.nets.1.convs.2.bias', 'disc.nets.1.convs.2.weight_g', 'disc.nets.1.convs.2.weight_v', 'disc.nets.1.convs.3.bias', 'disc.nets.1.convs.3.weight_g', 'disc.nets.1.convs.3.weight_v', 'disc.nets.1.convs.4.bias', 'disc.nets.1.convs.4.weight_g', 'disc.nets.1.convs.4.weight_v', 'disc.nets.1.conv_post.bias', 'disc.nets.1.conv_post.weight_g', 'disc.nets.1.conv_post.weight_v', 'disc.nets.2.convs.0.bias']
+coqui torch wav seconds: 8.347573696145124
 
 ==================== ONNX EXPORT ====================
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/networks.py:70: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert x.shape[0] == x_lengths.shape[0]
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/glow_tts/transformer.py:134: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert t_s == t_t, "Relative attention is only available for self-attention."
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/glow_tts/transformer.py:200: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  pad_length = max(length - (self.rel_attn_window_size + 1), 0)
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/glow_tts/transformer.py:201: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  slice_start_position = max((self.rel_attn_window_size + 1) - length, 0)
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/glow_tts/transformer.py:203: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if pad_length > 0:
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/transforms.py:111: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if torch.min(inputs) < left or torch.max(inputs) > right:
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/transforms.py:116: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if min_bin_width * num_bins > 1.0:
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/transforms.py:118: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if min_bin_height * num_bins > 1.0:
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/transforms.py:168: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert (discriminant >= 0).all()
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/_internal/jit_utils.py:309: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_node_shape_type_inference(node, params_dict, opset_version)
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/symbolic_opset10.py:517: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.detach().clone() or sourceTensor.detach().clone().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return g.op("Constant", value_t=torch.tensor(list_or_value))
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/utils.py:684: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/utils.py:1154: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+exported: work/release/vani-hi-syspin-male.onnx 114.260636 MB
+tokens written: 89
+metadata: {'model_type': 'vits', 'comment': 'coqui', 'language': 'Hindi', 'voice': 'syspin-hi-male', 'add_blank': 1, 'n_speakers': 1, 'sample_rate': 22050, 'use_eos_bos': 0, 'blank_id': 92, 'pad_id': 0, 'frontend': 'characters', 'punctuation': "! ¡ ' ( ) , - . : ; ¿ ?  ", 'license': 'CC-BY-4.0 (SYSPIN, IISc Bangalore - as labelled on Hugging Face)', 'url': 'https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiMale'}
+
+==================== SHERPA-ONNX TEST (fp32) ====================
+sherpa sherpa-fp32 sample1: 7.04s audio, 2.07s compute, RTF 0.294
+sherpa sherpa-fp32 sample2: 4.15s audio, 1.23s compute, RTF 0.296
+
+==================== INT8 ====================
+[0;93m2026-10-12 04:29:03.890629378 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+WARNING:root:Please consider to run pre-processing before quantization. Refer to example: https://github.com/microsoft/onnxruntime-inference-examples/blob/main/quantization/image_classification/cpu/ReadMe.md 
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__23"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__42"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__71"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__83"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__96"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.0/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.0/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__153"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__172"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__201"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__213"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__226"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.1/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.1/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__283"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__302"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__331"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__343"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__356"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.2/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.2/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__413"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__432"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__461"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__473"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__486"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.3/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.3/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__543"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__562"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__591"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__603"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__616"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.4/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.4/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__673"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__692"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__721"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__733"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__746"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.5/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.5/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__925"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__929"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__930"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__931"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_4_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__932"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/Slice_11_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_5_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1033"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1039"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1157"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1161"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1162"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1163"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_4_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1164"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/Slice_11_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_5_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1265"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1271"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1389"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1393"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1394"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1395"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_4_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1396"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/Slice_11_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_5_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1497"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1503"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+metadata: {'model_type': 'vits', 'comment': 'coqui', 'language': 'Hindi', 'voice': 'syspin-hi-male', 'add_blank': 1, 'n_speakers': 1, 'sample_rate': 22050, 'use_eos_bos': 0, 'blank_id': 92, 'pad_id': 0, 'frontend': 'characters', 'punctuation': "! ¡ ' ( ) , - . : ; ¿ ?  ", 'license': 'CC-BY-4.0 (SYSPIN, IISc Bangalore - as labelled on Hugging Face)', 'url': 'https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiMale'}
+int8 size MB: 38.339386
+sherpa sherpa-int8 sample1: 7.08s audio, 9.29s compute, RTF 1.312
+sherpa sherpa-int8 sample2: 4.18s audio, 5.49s compute, RTF 1.312
 
 ==================== DONE ====================
+release file: vani-hi-syspin-male-tokens.txt 0.0 MB
+release file: vani-hi-syspin-male.int8.onnx 38.34 MB
+release file: vani-hi-syspin-male.onnx 114.26 MB
 + for V in HindiMale:hi_male_vits_30hrs.pt:male HindiFemale:hi_female_vits_30hrs.pt:female
 + IFS=:
 + read -r REPO PT NAME
@@ -1026,12 +1995,12 @@ ImportError: cannot import name 'isin_mps_friendly' from 'transformers.pytorch_u
 + curl -sSL --fail --retry 3 -o work/female/hi_female_vits_30hrs.pt https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiFemale/resolve/main/hi_female_vits_30hrs.pt
 + ls -la work/female
 total 325496
-drwxr-xr-x 2 runner runner      4096 Oct 12 04:26 .
-drwxr-xr-x 5 runner runner      4096 Oct 12 04:26 ..
--rw-r--r-- 1 runner runner       225 Oct 12 04:26 chars.txt
--rw-r--r-- 1 runner runner     26363 Oct 12 04:26 extra.py
--rw-r--r-- 1 runner runner 333261446 Oct 12 04:26 hi_female_vits_30hrs.pt
--rw-r--r-- 1 runner runner      1033 Oct 12 04:26 jit_infer.py
+drwxr-xr-x 2 runner runner      4096 Oct 12 04:29 .
+drwxr-xr-x 5 runner runner      4096 Oct 12 04:29 ..
+-rw-r--r-- 1 runner runner       225 Oct 12 04:29 chars.txt
+-rw-r--r-- 1 runner runner     26363 Oct 12 04:29 extra.py
+-rw-r--r-- 1 runner runner 333261446 Oct 12 04:29 hi_female_vits_30hrs.pt
+-rw-r--r-- 1 runner runner      1033 Oct 12 04:29 jit_infer.py
 + python vani-hindi/convert.py work/female vani-hindi/out work/release female hi_female_vits_30hrs.pt
 
 ==================== FILES ====================
@@ -1951,7 +2920,7 @@ emb: [('text_encoder.emb.weight', (93, 192)), ('text_encoder.encoder.attn_layers
 
 ==================== REFERENCE (their jit_infer.py) ====================
 reference wav saved: jit.wav
-tokenizer: <extra.TTSTokenizer object at 0x7fdd9a8e05d0> config: <class 'extra.VitsConfig'>
+tokenizer: <extra.TTSTokenizer object at 0x7f368254c050> config: <class 'extra.VitsConfig'>
 characters class: <class 'extra.VitsCharacters'>
 vocab size: 93
 vocab: ['<PAD>', '!', '¡', "'", '(', ')', ',', '-', '.', ':', ';', '¿', '?', ' ', 'श', 'द', 'ऊ', 'त', 'स', 'ओ', 'ष', 'म', 'र', '़', 'ढ', 'ै', '?', 'ख़', 'ौ', 'क़', 'ड़', 'ः', 'ि', 'अ', 'न', 'ठ', 'य़', 'ज़', 'फ़', '्', 'ख', 'ँ', 'े', '।', 'ं', 'ऋ', 'उ', "'", 'ह', 'छ', 'ङ', 'झ', '"', ' ', 'ु', 'ण', 'औ', 'घ', 'य', 'ञ', 'ृ', 'ए', 'ई', 'ॆ', 'ी', 'प', 'च', 'ॉ', 'ॠ', 'व', 'ग', 'ड', 'ट', 'इ', ',', 'ब', 'ॅ', 'ू', 'ऐ', 'फ', 'क', 'ज', 'ल', 'ग़', 'आ', 'ध', 'ो', 'थ', 'ा', 'भ', 'ढ़', 'ऑ', '<BLNK>']
@@ -1965,44 +2934,1044 @@ pad_id 0
 eos_id 93
 bos_id 93
 blank_id 92
-cleaner: <function multilingual_cleaners at 0x7fdd887291c0>
+cleaner: <function multilingual_cleaners at 0x7f3670240f40>
 test ids: [92, 34, 92, 21, 92, 18, 92, 39, 92, 17, 92, 42, 92, 74, 92, 53, 92, 21, 92, 25, 92, 44, 92, 53, 92, 69, 92, 88, 92, 55, 92, 64, 92, 53, 92, 80, 92, 64, 92, 53, 92, 34, 92, 62, 92, 53, 92, 48, 92, 32, 92, 44, 92, 15, 92, 64, 92, 53, 92, 84, 92, 69, 92, 88, 92, 81, 92, 23, 92, 53, 92, 48, 92, 77, 92, 41, 92, 43, 92, 53, 92, 84, 92, 81, 92, 53, 92, 21, 92, 28, 92, 18, 92, 21, 92, 53, 92, 75, 92, 48, 92, 54, 92, 17, 92, 53, 92, 33, 92, 66, 92, 39, 92, 49, 92, 88, 92, 53, 92, 48, 92, 25, 92, 74, 92, 53, 92, 56, 92, 22, 92, 53, 92, 33, 92, 89, 92, 64, 92, 53, 92, 18, 92, 54, 92, 75, 92, 48, 92, 53, 92, 80, 92, 42, 92, 53, 92, 15, 92, 18, 92, 53, 92, 75, 92, 81, 92, 80, 92, 22, 92, 53, 92, 65, 92, 44, 92, 15, 92, 39, 92, 22, 92, 48, 92, 53, 92, 21, 92, 32, 92, 34, 92, 72, 92, 53, 92, 48, 92, 54, 92, 61, 92, 53, 92, 48, 92, 25, 92, 44, 92, 43, 92]
 config.add_blank: True enable_eos_bos_chars: False text_cleaner: multilingual_cleaners
 sample_rate: 22050
 model_args: VitsArgs(num_chars=100, out_channels=513, spec_segment_size=32, hidden_channels=192, hidden_channels_ffn_text_encoder=768, num_heads_text_encoder=2, num_layers_text_encoder=6, kernel_size_text_encoder=3, dropout_p_text_encoder=0.1, dropout_p_duration_predictor=0.5, kernel_size_posterior_encoder=5, dilation_rate_posterior_encoder=1, num_layers_posterior_encoder=16, kernel_size_flow=5, dilation_rate_flow=1, num_layers_flow=4, resblock_type_decoder='1', resblock_kernel_sizes_decoder=[3, 7, 11], resblock_dilation_sizes_decoder=[[1, 3, 5], [1, 3, 5], [1, 3, 5]], upsample_rates_decoder=[8, 8, 2, 2], upsample_initial_channel_decoder=512, upsample_kernel_sizes_decoder=[16, 16, 4, 4], periods_multi_period_discriminator=[2, 3, 5, 7, 11], use_sdp=True, noise_scale=1.0, inference_noise_scale=0.667, length_scale=1, noise_scale_dp=1.0, inference_noise_scale_dp=1.0, max_inference_len=None, init_discriminator=True, use_spectral_norm_disriminator=False, use_speaker_embedding=False, num_speakers=0, speakers_file=None, d_vector_file=None, speaker_embedding_channels=256, use_d_vector_file=False, d_vector_dim=0, detach_dp_input=True, use_language_embedding=False, embedded_language_dim=4, num_languages=0, language_ids_file=None, use_speaker_encoder_as_loss=False, speaker_encoder_config_path='', speaker_encoder_model_path='', condition_dp_on_speaker=True, freeze_encoder=False, freeze_DP=False, freeze_PE=False, freeze_flow_decoder=False, freeze_waveform_decoder=False, encoder_sample_rate=None, interpolate_z=True, reinit_DP=False, reinit_text_encoder=False)
 
 ==================== COQUI VITS + WEIGHTS ====================
-Traceback (most recent call last):
-  File "/home/runner/work/time-announcer-voices/time-announcer-voices/vani-hindi/convert.py", line 144, in <module>
-    from TTS.tts.configs.vits_config import VitsConfig
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/__init__.py", line 35, in <module>
-    from TTS.tts.configs.xtts_config import XttsConfig
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/configs/xtts_config.py", line 4, in <module>
-    from TTS.tts.models.xtts import XttsArgs, XttsAudioConfig
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/models/xtts.py", line 15, in <module>
-    from TTS.tts.layers.xtts.gpt import GPT
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/xtts/gpt.py", line 10, in <module>
-    from TTS.tts.layers.tortoise.autoregressive import (
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/tortoise/autoregressive.py", line 12, in <module>
-    from transformers.pytorch_utils import isin_mps_friendly as isin
-ImportError: cannot import name 'isin_mps_friendly' from 'transformers.pytorch_utils' (/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/transformers/pytorch_utils.py)
-
+num_chars from weights: 93
+missing keys: 0 []
+unexpected keys: 111 ['disc.nets.0.convs.0.bias', 'disc.nets.0.convs.0.weight_g', 'disc.nets.0.convs.0.weight_v', 'disc.nets.0.convs.1.bias', 'disc.nets.0.convs.1.weight_g', 'disc.nets.0.convs.1.weight_v', 'disc.nets.0.convs.2.bias', 'disc.nets.0.convs.2.weight_g', 'disc.nets.0.convs.2.weight_v', 'disc.nets.0.convs.3.bias', 'disc.nets.0.convs.3.weight_g', 'disc.nets.0.convs.3.weight_v', 'disc.nets.0.convs.4.bias', 'disc.nets.0.convs.4.weight_g', 'disc.nets.0.convs.4.weight_v', 'disc.nets.0.convs.5.bias', 'disc.nets.0.convs.5.weight_g', 'disc.nets.0.convs.5.weight_v', 'disc.nets.0.conv_post.bias', 'disc.nets.0.conv_post.weight_g', 'disc.nets.0.conv_post.weight_v', 'disc.nets.1.convs.0.bias', 'disc.nets.1.convs.0.weight_g', 'disc.nets.1.convs.0.weight_v', 'disc.nets.1.convs.1.bias', 'disc.nets.1.convs.1.weight_g', 'disc.nets.1.convs.1.weight_v', 'disc.nets.1.convs.2.bias', 'disc.nets.1.convs.2.weight_g', 'disc.nets.1.convs.2.weight_v', 'disc.nets.1.convs.3.bias', 'disc.nets.1.convs.3.weight_g', 'disc.nets.1.convs.3.weight_v', 'disc.nets.1.convs.4.bias', 'disc.nets.1.convs.4.weight_g', 'disc.nets.1.convs.4.weight_v', 'disc.nets.1.conv_post.bias', 'disc.nets.1.conv_post.weight_g', 'disc.nets.1.conv_post.weight_v', 'disc.nets.2.convs.0.bias']
+coqui torch wav seconds: 7.244625850340136
 
 ==================== ONNX EXPORT ====================
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/networks.py:70: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert x.shape[0] == x_lengths.shape[0]
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/glow_tts/transformer.py:134: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert t_s == t_t, "Relative attention is only available for self-attention."
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/glow_tts/transformer.py:200: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  pad_length = max(length - (self.rel_attn_window_size + 1), 0)
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/glow_tts/transformer.py:201: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  slice_start_position = max((self.rel_attn_window_size + 1) - length, 0)
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/glow_tts/transformer.py:203: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if pad_length > 0:
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/transforms.py:111: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if torch.min(inputs) < left or torch.max(inputs) > right:
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/transforms.py:116: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if min_bin_width * num_bins > 1.0:
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/transforms.py:118: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if min_bin_height * num_bins > 1.0:
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/vits/transforms.py:168: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert (discriminant >= 0).all()
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/_internal/jit_utils.py:309: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_node_shape_type_inference(node, params_dict, opset_version)
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/symbolic_opset10.py:517: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.detach().clone() or sourceTensor.detach().clone().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return g.op("Constant", value_t=torch.tensor(list_or_value))
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/utils.py:684: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/torch/onnx/utils.py:1154: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at /pytorch/torch/csrc/jit/passes/onnx/constant_fold.cpp:178.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+exported: work/release/vani-hi-syspin-female.onnx 114.260636 MB
+tokens written: 89
+metadata: {'model_type': 'vits', 'comment': 'coqui', 'language': 'Hindi', 'voice': 'syspin-hi-female', 'add_blank': 1, 'n_speakers': 1, 'sample_rate': 22050, 'use_eos_bos': 0, 'blank_id': 92, 'pad_id': 0, 'frontend': 'characters', 'punctuation': "! ¡ ' ( ) , - . : ; ¿ ?  ", 'license': 'CC-BY-4.0 (SYSPIN, IISc Bangalore - as labelled on Hugging Face)', 'url': 'https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiFemale'}
+
+==================== SHERPA-ONNX TEST (fp32) ====================
+sherpa sherpa-fp32 sample1: 6.45s audio, 1.99s compute, RTF 0.308
+sherpa sherpa-fp32 sample2: 3.88s audio, 1.12s compute, RTF 0.290
+
+==================== INT8 ====================
+[0;93m2026-10-12 04:29:47.996949894 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+WARNING:root:Please consider to run pre-processing before quantization. Refer to example: https://github.com/microsoft/onnxruntime-inference-examples/blob/main/quantization/image_classification/cpu/ReadMe.md 
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__23"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__42"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__71"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__83"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.0/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__96"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.0/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.0/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__153"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__172"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__201"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__213"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.1/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__226"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.1/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.1/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__283"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__302"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__331"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__343"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.2/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__356"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.2/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.2/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__413"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__432"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__461"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__473"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.3/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__486"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.3/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.3/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__543"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__562"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__591"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__603"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.4/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__616"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.4/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.4/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__673"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__692"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__721"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_7_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__733"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/attn_layers.5/Slice_9_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__746"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.5/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/text_encoder/encoder/ffn_layers.5/Slice_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__925"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__929"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__930"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__931"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_4_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__932"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/Slice_11_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_5_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1033"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.4/NonZero_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1039"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1157"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1161"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1162"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1163"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_4_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1164"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/Slice_11_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_5_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1265"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.3/NonZero_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1271"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/Slice_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 4
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1389"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_1_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1393"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_2_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1394"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_3_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1395"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_4_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1396"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/Slice_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/Slice_11_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 2
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_5_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1497"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/duration_predictor/flows.2/NonZero_6_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_param: "unk__1503"
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_value: 3
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+metadata: {'model_type': 'vits', 'comment': 'coqui', 'language': 'Hindi', 'voice': 'syspin-hi-female', 'add_blank': 1, 'n_speakers': 1, 'sample_rate': 22050, 'use_eos_bos': 0, 'blank_id': 92, 'pad_id': 0, 'frontend': 'characters', 'punctuation': "! ¡ ' ( ) , - . : ; ¿ ?  ", 'license': 'CC-BY-4.0 (SYSPIN, IISc Bangalore - as labelled on Hugging Face)', 'url': 'https://huggingface.co/SYSPIN/tts_vits_coquiai_HindiFemale'}
+int8 size MB: 38.339398
+sherpa sherpa-int8 sample1: 6.64s audio, 9.61s compute, RTF 1.446
+sherpa sherpa-int8 sample2: 3.95s audio, 5.19s compute, RTF 1.313
 
 ==================== DONE ====================
+release file: vani-hi-syspin-female-tokens.txt 0.0 MB
+release file: vani-hi-syspin-female.int8.onnx 38.34 MB
+release file: vani-hi-syspin-female.onnx 114.26 MB
+release file: vani-hi-syspin-male-tokens.txt 0.0 MB
+release file: vani-hi-syspin-male.int8.onnx 38.34 MB
+release file: vani-hi-syspin-male.onnx 114.26 MB
 + ls -la vani-hindi/out work/release
 vani-hindi/out:
-total 672
-drwxr-xr-x 2 runner runner   4096 Oct 12 04:26 .
-drwxr-xr-x 4 runner runner   4096 Oct 12 04:24 ..
--rw-r--r-- 1 runner runner  38169 Oct 12 04:26 female-convert-log.txt
--rw-r--r-- 1 runner runner 259628 Oct 12 04:26 female-reference-jit.wav
--rw-r--r-- 1 runner runner  38167 Oct 12 04:26 male-convert-log.txt
--rw-r--r-- 1 runner runner 250924 Oct 12 04:26 male-reference-jit.wav
--rw-r--r-- 1 runner runner  81406 Oct 12 04:26 run-log.txt
+total 3284
+drwxr-xr-x 2 runner runner   4096 Oct 12 04:30 .
+drwxr-xr-x 4 runner runner   4096 Oct 12 04:27 ..
+-rw-r--r-- 1 runner runner  39847 Oct 12 04:30 female-convert-log.txt
+-rw-r--r-- 1 runner runner 319532 Oct 12 04:29 female-coqui-torch.wav
+-rw-r--r-- 1 runner runner 243244 Oct 12 04:29 female-reference-jit.wav
+-rw-r--r-- 1 runner runner 284696 Oct 12 04:29 female-sherpa-fp32-sample1.wav
+-rw-r--r-- 1 runner runner 170934 Oct 12 04:29 female-sherpa-fp32-sample2.wav
+-rw-r--r-- 1 runner runner 293064 Oct 12 04:30 female-sherpa-int8-sample1.wav
+-rw-r--r-- 1 runner runner 174242 Oct 12 04:30 female-sherpa-int8-sample2.wav
+-rw-r--r-- 1 runner runner  39675 Oct 12 04:29 male-convert-log.txt
+-rw-r--r-- 1 runner runner 368172 Oct 12 04:28 male-coqui-torch.wav
+-rw-r--r-- 1 runner runner 263212 Oct 12 04:28 male-reference-jit.wav
+-rw-r--r-- 1 runner runner 310666 Oct 12 04:29 male-sherpa-fp32-sample1.wav
+-rw-r--r-- 1 runner runner 183142 Oct 12 04:29 male-sherpa-fp32-sample2.wav
+-rw-r--r-- 1 runner runner 312258 Oct 12 04:29 male-sherpa-int8-sample1.wav
+-rw-r--r-- 1 runner runner 184556 Oct 12 04:29 male-sherpa-int8-sample2.wav
+-rw-r--r-- 1 runner runner 135728 Oct 12 04:30 run-log.txt
 
 work/release:
-total 8
-drwxr-xr-x 2 runner runner 4096 Oct 12 04:24 .
-drwxr-xr-x 5 runner runner 4096 Oct 12 04:26 ..
+total 298072
+drwxr-xr-x 2 runner runner      4096 Oct 12 04:29 .
+drwxr-xr-x 5 runner runner      4096 Oct 12 04:29 ..
+-rw-r--r-- 1 runner runner       594 Oct 12 04:29 vani-hi-syspin-female-tokens.txt
+-rw-r--r-- 1 runner runner  38339398 Oct 12 04:29 vani-hi-syspin-female.int8.onnx
+-rw-r--r-- 1 runner runner 114261034 Oct 12 04:29 vani-hi-syspin-female.onnx
+-rw-r--r-- 1 runner runner       594 Oct 12 04:28 vani-hi-syspin-male-tokens.txt
+-rw-r--r-- 1 runner runner  38339386 Oct 12 04:29 vani-hi-syspin-male.int8.onnx
+-rw-r--r-- 1 runner runner 114261030 Oct 12 04:28 vani-hi-syspin-male.onnx

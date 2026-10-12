@@ -1,0 +1,57 @@
+name: vani-hindi-voices
+
+# Sirf "vani-hindi-voices" branch par chalta hai. main branch aur purani
+# "time-announcer-voices" release ko yeh bilkul nahi chhoota.
+on:
+  push:
+    branches: [vani-hindi-voices]
+    paths:
+      - 'vani-hindi/*.py'
+      - 'vani-hindi/*.sh'
+      - '.github/workflows/vani-hindi.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vani-hindi
+  cancel-in-progress: true
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download, convert, test
+        run: |
+          mkdir -p vani-hindi/out work/release
+          bash vani-hindi/run.sh 2>&1 | tee vani-hindi/out/run-log.txt
+
+      - name: Save logs and sample audio to this branch
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vani-hindi/out
+          git commit -m "Vani Hindi: results of run ${{ github.run_number }} [skip ci]" || echo "nothing to commit"
+          git pull --rebase origin vani-hindi-voices || true
+          git push origin HEAD:vani-hindi-voices || true
+
+      - name: Upload converted voices to a separate test release
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls work/release/* >/dev/null 2>&1 || { echo "no release files"; exit 0; }
+          ls -la work/release
+          gh release view vani-hindi-test >/dev/null 2>&1 || \
+            gh release create vani-hindi-test --target vani-hindi-voices --prerelease \
+              --title "Vani TTS - Hindi test voices (SYSPIN)" \
+              --notes "Test only. Hindi male/female voices from SYSPIN (IISc), converted for sherpa-onnx. Hugging Face label: CC-BY-4.0."
+          gh release upload vani-hindi-test work/release/* --clobber

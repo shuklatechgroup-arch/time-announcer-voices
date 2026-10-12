@@ -4,7 +4,7 @@ set -x
 cd "$GITHUB_WORKSPACE"
 
 python -m pip install --upgrade pip -q
-printf 'torch==2.8.0\ntorchaudio==2.8.0\n' > /tmp/constraints.txt
+printf 'torch==2.8.0\ntorchaudio==2.8.0\ntransformers<5\n' > /tmp/constraints.txt
 pip install -q torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cpu
 pip install -q -c /tmp/constraints.txt coqui-tts onnx onnxruntime sherpa-onnx soundfile
 python -c 'import torch, torchaudio; print("torch ok", torch.__version__, torchaudio.__version__)'

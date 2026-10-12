@@ -1,0 +1,111 @@
++ cd /home/runner/work/time-announcer-voices/time-announcer-voices
++ pip install -q sherpa-onnx onnx onnxruntime onnxsim soundfile
++ pip list
++ grep -i -E '^(onnx|onnxruntime|onnxsim|sherpa)'
+onnx              1.23.2
+onnxruntime       1.31.0
+onnxsim           0.8.1
+sherpa_onnx       1.13.8
+sherpa-onnx-core  1.13.8
++ W=work
++ mkdir -p work/syspin work/pratham
++ HF=https://huggingface.co/Shuklatechgroup/vani-tts-voices/resolve/main
++ curl -sSL --fail -o work/syspin/vani-hi-syspin-male.onnx https://huggingface.co/Shuklatechgroup/vani-tts-voices/resolve/main/syspin-hindi/vani-hi-syspin-male.onnx
++ curl -sSL --fail -o work/syspin/vani-hi-syspin-male-tokens.txt https://huggingface.co/Shuklatechgroup/vani-tts-voices/resolve/main/syspin-hindi/vani-hi-syspin-male-tokens.txt
++ curl -sSL --fail -o work/pratham.zip https://huggingface.co/Shuklatechgroup/vani-tts-voices/resolve/main/hi_IN-pratham-medium.zip
++ curl -sSL --fail -o work/espeak.zip https://huggingface.co/Shuklatechgroup/vani-tts-voices/resolve/main/espeak-ng-data.zip
++ cd work
++ unzip -q -o pratham.zip -d pratham_raw
++ unzip -q -o espeak.zip -d espeak_raw
++ find work/pratham_raw -maxdepth 3
++ head
+work/pratham_raw
+work/pratham_raw/hi_IN-pratham-medium
+work/pratham_raw/hi_IN-pratham-medium/hi_IN-pratham-medium.onnx
+work/pratham_raw/hi_IN-pratham-medium/tokens.txt
++ find work/espeak_raw -maxdepth 2
++ head -5
+work/espeak_raw
+work/espeak_raw/espeak-ng-data
+work/espeak_raw/espeak-ng-data/my_dict
+work/espeak_raw/espeak-ng-data/id_dict
+work/espeak_raw/espeak-ng-data/gn_dict
+find: ‘standard output’: Broken pipe
+find: write error
+++ find work/pratham_raw -name '*.onnx'
+++ head -1
++ cp work/pratham_raw/hi_IN-pratham-medium/hi_IN-pratham-medium.onnx work/pratham/hi_IN-pratham-medium.onnx
+++ find work/pratham_raw -name tokens.txt
+++ head -1
++ cp work/pratham_raw/hi_IN-pratham-medium/tokens.txt work/pratham/tokens.txt
++++ find work/espeak_raw -name phontab
++++ head -1
+++ dirname work/espeak_raw/espeak-ng-data/phontab
++ ED=work/espeak_raw/espeak-ng-data
+++ realpath work/espeak_raw/espeak-ng-data
++ ln -sfn /home/runner/work/time-announcer-voices/time-announcer-voices/work/espeak_raw/espeak-ng-data work/espeak-ng-data
++ ls -la work/pratham work/espeak-ng-data/
++ head
+work/espeak-ng-data/:
+total 17740
+drwxr-xr-x  4 runner runner    4096 Sep  8 07:50 .
+drwxr-xr-x  3 runner runner    4096 Oct 12 06:04 ..
+-rw-r--r--  1 runner runner  121473 Sep  8 07:50 af_dict
+-rw-r--r--  1 runner runner   63878 Sep  8 07:50 am_dict
+-rw-r--r--  1 runner runner    6691 Sep  8 07:50 an_dict
+-rw-r--r--  1 runner runner  478165 Sep  8 07:50 ar_dict
+-rw-r--r--  1 runner runner    5005 Sep  8 07:50 as_dict
+-rw-r--r--  1 runner runner   43773 Sep  8 07:50 az_dict
+ls: write error: Broken pipe
++ python -
+[0;93m2026-10-12 06:04:10.162118177 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+onnxsim ok: True nodes 6475 -> 2782 0.9s
++ python vani-hindi/bench.py work vani-hindi/out
+
+#### pratham: 63.1 MB, nodes=2288, top ops=[('Unsqueeze', 230), ('Mul', 183), ('Add', 174), ('Gather', 162), ('Reshape', 161), ('Slice', 161), ('Shape', 144), ('Transpose', 141)]
+[pratham threads=2] LOAD 0.80s
+   first-short              compute   0.06s  audio   0.62s
+   short                    compute   0.05s  audio   0.67s
+   talkback                 compute   0.16s  audio   2.19s
+   paragraph                compute   0.94s  audio  14.79s
+   paragraph-danda-to-dot   compute   0.90s  audio  14.60s
+   first-sentence-only      compute   0.17s
+[pratham threads=4] LOAD 0.74s
+   first-short              compute   0.06s  audio   0.62s
+   short                    compute   0.06s  audio   0.67s
+   talkback                 compute   0.17s  audio   2.19s
+   paragraph                compute   1.01s  audio  14.79s
+   paragraph-danda-to-dot   compute   0.93s  audio  14.60s
+   first-sentence-only      compute   0.18s
+
+#### syspin-male: 114.3 MB, nodes=6475, top ops=[('Constant', 2548), ('Unsqueeze', 355), ('Shape', 335), ('Mul', 327), ('Add', 299), ('Slice', 255), ('Reshape', 235), ('Concat', 227)]
+[syspin-male threads=2] LOAD 0.88s
+   first-short              compute   0.50s  audio   0.91s
+   short                    compute   0.31s  audio   0.81s
+   talkback                 compute   1.08s  audio   2.42s
+   paragraph                compute   6.47s  audio  14.60s
+   paragraph-danda-to-dot   compute   7.36s  audio  16.85s
+   first-sentence-only      compute   1.47s
+[syspin-male threads=4] LOAD 0.87s
+   first-short              compute   0.47s  audio   0.91s
+   short                    compute   0.31s  audio   0.81s
+   talkback                 compute   1.03s  audio   2.42s
+   paragraph                compute   6.02s  audio  14.60s
+   paragraph-danda-to-dot   compute   6.96s  audio  16.85s
+   first-sentence-only      compute   1.35s
+
+#### syspin-male-opt: 113.9 MB, nodes=2782, top ops=[('Add', 284), ('Mul', 253), ('Unsqueeze', 200), ('Slice', 191), ('Conv', 183), ('Reshape', 155), ('Shape', 145), ('Transpose', 143)]
+[syspin-male-opt threads=2] LOAD 0.58s
+   first-short              compute   0.30s  audio   0.78s
+   short                    compute   0.46s  audio   1.18s
+   talkback                 compute   1.09s  audio   2.46s
+   paragraph                compute   6.41s  audio  14.45s
+   paragraph-danda-to-dot   compute   7.15s  audio  16.49s
+   first-sentence-only      compute   1.46s
+[syspin-male-opt threads=4] LOAD 0.59s
+   first-short              compute   0.31s  audio   0.78s
+   short                    compute   0.43s  audio   1.18s
+   talkback                 compute   1.04s  audio   2.46s
+   paragraph                compute   5.92s  audio  14.45s
+   paragraph-danda-to-dot   compute   6.73s  audio  16.49s
+   first-sentence-only      compute   1.38s

@@ -1,0 +1,48 @@
+
+#### pratham: 63.1 MB, nodes=2288, top ops=[('Unsqueeze', 230), ('Mul', 183), ('Add', 174), ('Gather', 162), ('Reshape', 161), ('Slice', 161), ('Shape', 144), ('Transpose', 141)]
+[pratham threads=2] LOAD 0.80s
+   first-short              compute   0.06s  audio   0.62s
+   short                    compute   0.05s  audio   0.67s
+   talkback                 compute   0.16s  audio   2.19s
+   paragraph                compute   0.94s  audio  14.79s
+   paragraph-danda-to-dot   compute   0.90s  audio  14.60s
+   first-sentence-only      compute   0.17s
+[pratham threads=4] LOAD 0.74s
+   first-short              compute   0.06s  audio   0.62s
+   short                    compute   0.06s  audio   0.67s
+   talkback                 compute   0.17s  audio   2.19s
+   paragraph                compute   1.01s  audio  14.79s
+   paragraph-danda-to-dot   compute   0.93s  audio  14.60s
+   first-sentence-only      compute   0.18s
+
+#### syspin-male: 114.3 MB, nodes=6475, top ops=[('Constant', 2548), ('Unsqueeze', 355), ('Shape', 335), ('Mul', 327), ('Add', 299), ('Slice', 255), ('Reshape', 235), ('Concat', 227)]
+[syspin-male threads=2] LOAD 0.88s
+   first-short              compute   0.50s  audio   0.91s
+   short                    compute   0.31s  audio   0.81s
+   talkback                 compute   1.08s  audio   2.42s
+   paragraph                compute   6.47s  audio  14.60s
+   paragraph-danda-to-dot   compute   7.36s  audio  16.85s
+   first-sentence-only      compute   1.47s
+[syspin-male threads=4] LOAD 0.87s
+   first-short              compute   0.47s  audio   0.91s
+   short                    compute   0.31s  audio   0.81s
+   talkback                 compute   1.03s  audio   2.42s
+   paragraph                compute   6.02s  audio  14.60s
+   paragraph-danda-to-dot   compute   6.96s  audio  16.85s
+   first-sentence-only      compute   1.35s
+
+#### syspin-male-opt: 113.9 MB, nodes=2782, top ops=[('Add', 284), ('Mul', 253), ('Unsqueeze', 200), ('Slice', 191), ('Conv', 183), ('Reshape', 155), ('Shape', 145), ('Transpose', 143)]
+[syspin-male-opt threads=2] LOAD 0.58s
+   first-short              compute   0.30s  audio   0.78s
+   short                    compute   0.46s  audio   1.18s
+   talkback                 compute   1.09s  audio   2.46s
+   paragraph                compute   6.41s  audio  14.45s
+   paragraph-danda-to-dot   compute   7.15s  audio  16.49s
+   first-sentence-only      compute   1.46s
+[syspin-male-opt threads=4] LOAD 0.59s
+   first-short              compute   0.31s  audio   0.78s
+   short                    compute   0.43s  audio   1.18s
+   talkback                 compute   1.04s  audio   2.46s
+   paragraph                compute   5.92s  audio  14.45s
+   paragraph-danda-to-dot   compute   6.73s  audio  16.49s
+   first-sentence-only      compute   1.38s

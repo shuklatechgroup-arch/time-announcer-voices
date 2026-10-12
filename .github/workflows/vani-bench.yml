@@ -1,0 +1,35 @@
+name: vani-bench
+
+# Sirf "vani-hindi-voices" branch par. Pratham aur SYSPIN voice ka time napta hai.
+on:
+  push:
+    branches: [vani-hindi-voices]
+    paths:
+      - 'vani-hindi/bench.py'
+      - 'vani-hindi/bench.sh'
+
+permissions:
+  contents: write
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Measure
+        run: |
+          mkdir -p vani-hindi/out
+          bash vani-hindi/bench.sh 2>&1 | tee vani-hindi/out/bench-run-log.txt
+      - name: Save log
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vani-hindi/out
+          git commit -m "Vani bench results [skip ci]" || echo "nothing"
+          git pull --rebase origin vani-hindi-voices || true
+          git push origin HEAD:vani-hindi-voices || true

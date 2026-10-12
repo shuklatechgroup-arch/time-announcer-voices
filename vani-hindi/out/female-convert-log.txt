@@ -916,7 +916,7 @@ emb: [('text_encoder.emb.weight', (93, 192)), ('text_encoder.encoder.attn_layers
 
 ==================== REFERENCE (their jit_infer.py) ====================
 reference wav saved: jit.wav
-tokenizer: <extra.TTSTokenizer object at 0x7faa43a41f90> config: <class 'extra.VitsConfig'>
+tokenizer: <extra.TTSTokenizer object at 0x7fdd9a8e05d0> config: <class 'extra.VitsConfig'>
 characters class: <class 'extra.VitsCharacters'>
 vocab size: 93
 vocab: ['<PAD>', '!', '¡', "'", '(', ')', ',', '-', '.', ':', ';', '¿', '?', ' ', 'श', 'द', 'ऊ', 'त', 'स', 'ओ', 'ष', 'म', 'र', '़', 'ढ', 'ै', '?', 'ख़', 'ौ', 'क़', 'ड़', 'ः', 'ि', 'अ', 'न', 'ठ', 'य़', 'ज़', 'फ़', '्', 'ख', 'ँ', 'े', '।', 'ं', 'ऋ', 'उ', "'", 'ह', 'छ', 'ङ', 'झ', '"', ' ', 'ु', 'ण', 'औ', 'घ', 'य', 'ञ', 'ृ', 'ए', 'ई', 'ॆ', 'ी', 'प', 'च', 'ॉ', 'ॠ', 'व', 'ग', 'ड', 'ट', 'इ', ',', 'ब', 'ॅ', 'ू', 'ऐ', 'फ', 'क', 'ज', 'ल', 'ग़', 'आ', 'ध', 'ो', 'थ', 'ा', 'भ', 'ढ़', 'ऑ', '<BLNK>']
@@ -930,7 +930,7 @@ pad_id 0
 eos_id 93
 bos_id 93
 blank_id 92
-cleaner: <function multilingual_cleaners at 0x7faa433c71a0>
+cleaner: <function multilingual_cleaners at 0x7fdd887291c0>
 test ids: [92, 34, 92, 21, 92, 18, 92, 39, 92, 17, 92, 42, 92, 74, 92, 53, 92, 21, 92, 25, 92, 44, 92, 53, 92, 69, 92, 88, 92, 55, 92, 64, 92, 53, 92, 80, 92, 64, 92, 53, 92, 34, 92, 62, 92, 53, 92, 48, 92, 32, 92, 44, 92, 15, 92, 64, 92, 53, 92, 84, 92, 69, 92, 88, 92, 81, 92, 23, 92, 53, 92, 48, 92, 77, 92, 41, 92, 43, 92, 53, 92, 84, 92, 81, 92, 53, 92, 21, 92, 28, 92, 18, 92, 21, 92, 53, 92, 75, 92, 48, 92, 54, 92, 17, 92, 53, 92, 33, 92, 66, 92, 39, 92, 49, 92, 88, 92, 53, 92, 48, 92, 25, 92, 74, 92, 53, 92, 56, 92, 22, 92, 53, 92, 33, 92, 89, 92, 64, 92, 53, 92, 18, 92, 54, 92, 75, 92, 48, 92, 53, 92, 80, 92, 42, 92, 53, 92, 15, 92, 18, 92, 53, 92, 75, 92, 81, 92, 80, 92, 22, 92, 53, 92, 65, 92, 44, 92, 15, 92, 39, 92, 22, 92, 48, 92, 53, 92, 21, 92, 32, 92, 34, 92, 72, 92, 53, 92, 48, 92, 54, 92, 61, 92, 53, 92, 48, 92, 25, 92, 44, 92, 43, 92]
 config.add_blank: True enable_eos_bos_chars: False text_cleaner: multilingual_cleaners
 sample_rate: 22050
@@ -940,14 +940,17 @@ model_args: VitsArgs(num_chars=100, out_channels=513, spec_segment_size=32, hidd
 Traceback (most recent call last):
   File "/home/runner/work/time-announcer-voices/time-announcer-voices/vani-hindi/convert.py", line 144, in <module>
     from TTS.tts.configs.vits_config import VitsConfig
-  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/__init__.py", line 24, in <module>
-    raise ImportError(PYTORCH_IMPORT_ERROR)
-ImportError: 
-Coqui TTS requires the PyTorch and Torchaudio libraries but they were not found in your
-environment. Check out the instructions on the installation page:
-https://pytorch.org/get-started/locally/
-and follow the ones that match your environment.
-
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/__init__.py", line 35, in <module>
+    from TTS.tts.configs.xtts_config import XttsConfig
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/configs/xtts_config.py", line 4, in <module>
+    from TTS.tts.models.xtts import XttsArgs, XttsAudioConfig
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/models/xtts.py", line 15, in <module>
+    from TTS.tts.layers.xtts.gpt import GPT
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/xtts/gpt.py", line 10, in <module>
+    from TTS.tts.layers.tortoise.autoregressive import (
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/TTS/tts/layers/tortoise/autoregressive.py", line 12, in <module>
+    from transformers.pytorch_utils import isin_mps_friendly as isin
+ImportError: cannot import name 'isin_mps_friendly' from 'transformers.pytorch_utils' (/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/transformers/pytorch_utils.py)
 
 
 ==================== ONNX EXPORT ====================
